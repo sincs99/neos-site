@@ -1,0 +1,216 @@
+##
+# Gemeinsame Kopf-Felder (Dachzeile, Titel, Text)
+#
+prototype(Konezciny.Site:Content.Base) < prototype(Neos.Neos:ContentComponent) {
+    kicker = Neos.Neos:Editable {
+        property = 'kicker'
+        block = false
+    }
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    anchor = ${q(node).property('anchor') || null}
+    primaryLabel = ${q(node).property('primaryLabel')}
+    primaryLink = ${q(node).property('primaryLink')}
+    secondaryLabel = ${q(node).property('secondaryLabel')}
+    secondaryLink = ${q(node).property('secondaryLink')}
+
+    @process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Bühne mit Status-Terminal
+#
+prototype(Konezciny.Site:Content.Hero) < prototype(Konezciny.Site:Content.Base) {
+    showTerminal = ${q(node).property('showTerminal')}
+    projects = ${q(site).find('[instanceof Konezciny.Site:Document.Project]').get()}
+
+    renderer = afx`
+        <section class="kz-hero" id={props.anchor}>
+            <div class="kz-hero__bg" aria-hidden="true"><span class="kz-orb kz-orb--1"></span><span class="kz-orb kz-orb--2"></span></div>
+            <div class="kz-container kz-hero__inner">
+                <div class="kz-hero__copy">
+                    <p class="kz-kicker kz-kicker--mono">{props.kicker}</p>
+                    <h1 class="kz-hero__title">{props.headline}</h1>
+                    <div class="kz-hero__text">{props.text}</div>
+                    <div class="kz-hero__actions">
+                        <a class="kz-btn kz-btn--primary" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}<Konezciny.Site:Helper.Icon name="arrow" /></a>
+                        <a class="kz-btn kz-btn--ghost" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+                    </div>
+                </div>
+                <div class="kz-terminal" @if.show={props.showTerminal} aria-label="Status meiner Projekte">
+                    <div class="kz-terminal__bar">
+                        <i></i><i></i><i></i>
+                        <span>pascal@homelab: ~</span>
+                    </div>
+                    <div class="kz-terminal__body">
+                        <p class="kz-terminal__cmd"><span class="kz-prompt">$</span> status --projekte</p>
+                        <Neos.Fusion:Loop items={props.projects} itemName="project">
+                            <Konezciny.Site:Component.TerminalRow project={project} />
+                        </Neos.Fusion:Loop>
+                        <p class="kz-terminal__cmd"><span class="kz-prompt">$</span> <span class="kz-cursor"></span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Kennzahlen
+#
+prototype(Konezciny.Site:Content.Stats) < prototype(Neos.Neos:ContentComponent) {
+    v1 = Neos.Neos:Editable {
+        property = 'value1'
+        block = false
+    }
+    l1 = Neos.Neos:Editable {
+        property = 'label1'
+        block = false
+    }
+    v2 = Neos.Neos:Editable {
+        property = 'value2'
+        block = false
+    }
+    l2 = Neos.Neos:Editable {
+        property = 'label2'
+        block = false
+    }
+    v3 = Neos.Neos:Editable {
+        property = 'value3'
+        block = false
+    }
+    l3 = Neos.Neos:Editable {
+        property = 'label3'
+        block = false
+    }
+    v4 = Neos.Neos:Editable {
+        property = 'value4'
+        block = false
+    }
+    l4 = Neos.Neos:Editable {
+        property = 'label4'
+        block = false
+    }
+
+    renderer = afx`
+        <section class="kz-stats">
+            <div class="kz-container kz-stats__grid">
+                <div class="kz-stat"><span class="kz-stat__value">{props.v1}</span><span class="kz-stat__label">{props.l1}</span></div>
+                <div class="kz-stat"><span class="kz-stat__value">{props.v2}</span><span class="kz-stat__label">{props.l2}</span></div>
+                <div class="kz-stat"><span class="kz-stat__value">{props.v3}</span><span class="kz-stat__label">{props.l3}</span></div>
+                <div class="kz-stat"><span class="kz-stat__value">{props.v4}</span><span class="kz-stat__label">{props.l4}</span></div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Projektliste: alle Projektseiten der Website (Reihenfolge wie im Seitenbaum)
+#
+prototype(Konezciny.Site:Content.ProjectList) < prototype(Konezciny.Site:Content.Base) {
+    projects = ${q(site).find('[instanceof Konezciny.Site:Document.Project]').get()}
+
+    renderer = afx`
+        <section class="kz-section kz-projectlist" id={props.anchor}>
+            <div class="kz-container">
+                <Konezciny.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <div class="kz-projects">
+                    <Neos.Fusion:Loop items={props.projects} itemName="project">
+                        <Konezciny.Site:Component.ProjectCard project={project} />
+                    </Neos.Fusion:Loop>
+                </div>
+            </div>
+        </section>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            node = ${Neos.Caching.entryIdentifierForNode(node)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTag(node)}
+            2 = ${Neos.Caching.nodeTypeTag('Konezciny.Site:Document.Project', node)}
+        }
+    }
+}
+
+##
+# Liste mit Symbolen
+#
+prototype(Konezciny.Site:Content.Features) < prototype(Konezciny.Site:Content.Base) {
+    renderer = afx`
+        <section class="kz-section kz-features" id={props.anchor}>
+            <div class="kz-container">
+                <Konezciny.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['kz-featuregrid']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(Konezciny.Site:Content.Feature) < prototype(Neos.Neos:ContentComponent) {
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    icon = ${q(node).property('icon') || 'check'}
+
+    renderer = afx`
+        <div class="kz-feature">
+            <span class="kz-feature__icon"><Konezciny.Site:Helper.Icon name={props.icon} /></span>
+            <h3 class="kz-feature__title">{props.title}</h3>
+            <div class="kz-feature__text">{props.text}</div>
+        </div>
+    `
+}
+
+##
+# Text
+#
+prototype(Konezciny.Site:Content.Text) < prototype(Konezciny.Site:Content.Base) {
+    lead = ${q(node).property('lead')}
+
+    renderer = afx`
+        <section class={'kz-section kz-text' + (props.lead ? ' kz-text--lead' : '')} id={props.anchor}>
+            <div class="kz-container kz-text__inner">
+                <div class="kz-text__head">
+                    <p class="kz-kicker">{props.kicker}</p>
+                    <h2 class="kz-h2">{props.headline}</h2>
+                </div>
+                <div class="kz-prose">{props.text}</div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Aufruf
+#
+prototype(Konezciny.Site:Content.Cta) < prototype(Konezciny.Site:Content.Base) {
+    renderer = afx`
+        <section class="kz-section kz-cta-wrap" id={props.anchor}>
+            <div class="kz-container">
+                <div class="kz-cta">
+                    <div class="kz-cta__copy">
+                        <p class="kz-kicker kz-kicker--mono">{props.kicker}</p>
+                        <h2 class="kz-h2">{props.headline}</h2>
+                        <div class="kz-cta__text">{props.text}</div>
+                    </div>
+                    <div class="kz-cta__actions">
+                        <a class="kz-btn kz-btn--primary" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}<Konezciny.Site:Helper.Icon name="arrow" /></a>
+                        <a class="kz-btn kz-btn--ghost" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    `
+}

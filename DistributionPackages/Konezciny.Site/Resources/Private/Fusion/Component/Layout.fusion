@@ -1,0 +1,186 @@
+prototype(Konezciny.Site:Component.Header) < prototype(Neos.Fusion:Component) {
+    homeUri = Neos.Neos:NodeUri {
+        node = ${site}
+    }
+    menuItems = Neos.Neos:MenuItems {
+        maximumLevels = 2
+    }
+    contactUri = Neos.Neos:NodeUri {
+        node = ${q(site).children('[uriPathSegment="kontakt"]').get(0)}
+        @if.exists = ${q(site).children('[uriPathSegment="kontakt"]').count() > 0}
+    }
+
+    renderer = afx`
+        <header class="kz-header" data-kz-header>
+            <div class="kz-container kz-header__inner">
+                <a class="kz-logo" href={props.homeUri} aria-label="konezciny.com – Startseite">
+                    <span class="kz-logo__mark" aria-hidden="true">pk</span>
+                    <span class="kz-logo__text">konezciny<span>.com</span></span>
+                </a>
+                <button class="kz-burger" type="button" aria-label="Menü öffnen" aria-expanded="false" data-kz-burger>
+                    <span></span><span></span>
+                </button>
+                <nav class="kz-nav" aria-label="Hauptnavigation" data-kz-nav>
+                    <ul class="kz-nav__list">
+                        <Neos.Fusion:Loop items={props.menuItems} itemName="item">
+                            <li @if.notContact={q(item.node).property("uriPathSegment") != "kontakt"} class={'kz-nav__item' + ((item.state && (item.state.value == 'current' || item.state.value == 'active')) ? ' is-active' : '') + ((Type.isArray(item.subItems) && Array.length(item.subItems) > 0) ? ' has-sub' : '')}>
+                                <a class="kz-nav__link" href={item.uri}>{item.label}</a>
+                                <ul class="kz-nav__sub" @if.has={Type.isArray(item.subItems) && Array.length(item.subItems) > 0}>
+                                    <Neos.Fusion:Loop items={item.subItems} itemName="sub">
+                                        <li>
+                                            <a href={sub.uri}>
+                                                <span class={'kz-dot kz-dot--' + (q(sub.node).property('status') || 'live')}></span>
+                                                {sub.label}
+                                            </a>
+                                        </li>
+                                    </Neos.Fusion:Loop>
+                                </ul>
+                            </li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                    <a class="kz-btn kz-btn--primary kz-nav__cta" href={props.contactUri}>Kontakt</a>
+                </nav>
+            </div>
+        </header>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'kz-header'
+            documentNode = ${Neos.Caching.entryIdentifierForNode(documentNode)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', documentNode)}
+        }
+    }
+}
+
+##
+# Seitenkopf der Unterseiten; bei Projekten mit Status, Technik und Link
+#
+prototype(Konezciny.Site:Component.PageHero) < prototype(Neos.Fusion:Component) {
+    title = Neos.Neos:Editable {
+        node = ${documentNode}
+        property = 'title'
+        block = false
+    }
+    teaser = ${q(documentNode).property('teaser')}
+    isProject = ${q(documentNode).is('[instanceof Konezciny.Site:Document.Project]')}
+    status = ${q(documentNode).property('status') || 'live'}
+    icon = ${q(documentNode).property('icon') || 'code'}
+    accent = ${q(documentNode).property('accent') || 'violet'}
+    tags = ${String.split(q(documentNode).property('tags') || '', ',')}
+    projectUrl = ${q(documentNode).property('projectUrl')}
+    breadcrumb = Neos.Neos:BreadcrumbMenuItems
+
+    renderer = afx`
+        <section class={'kz-pagehero' + (props.isProject ? ' kz-pagehero--project kz-accent--' + props.accent : '')}>
+            <div class="kz-pagehero__grid" aria-hidden="true"></div>
+            <div class="kz-container kz-pagehero__inner">
+                <nav class="kz-breadcrumb" aria-label="Brotkrumen">
+                    <Neos.Fusion:Loop items={props.breadcrumb} itemName="crumb">
+                        <a href={crumb.uri}>{crumb.label}</a>
+                    </Neos.Fusion:Loop>
+                </nav>
+                <div class="kz-pagehero__head">
+                    <span class="kz-pagehero__icon" @if.project={props.isProject}><Konezciny.Site:Helper.Icon name={props.icon} /></span>
+                    <div>
+                        <span @if.project={props.isProject} class={'kz-status kz-status--' + props.status}><Konezciny.Site:Helper.StatusLabel status={props.status} /></span>
+                        <h1 class="kz-pagehero__title">{props.title}</h1>
+                    </div>
+                </div>
+                <p class="kz-pagehero__teaser" @if.has={props.teaser}>{props.teaser}</p>
+                <div class="kz-pagehero__meta" @if.project={props.isProject}>
+                    <span class="kz-tags">
+                        <Neos.Fusion:Loop items={props.tags} itemName="tag">
+                            <span class="kz-tag" @if.has={String.trim(tag)}>{String.trim(tag)}</span>
+                        </Neos.Fusion:Loop>
+                    </span>
+                    <a @if.url={props.projectUrl} class="kz-btn kz-btn--primary" href={props.projectUrl} target="_blank" rel="noopener">
+                        {String.replace(String.replace(props.projectUrl, 'https://', ''), 'http://', '')}
+                        <Konezciny.Site:Helper.Icon name="external" />
+                    </a>
+                </div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Unter Projektseiten: weitere Projekte
+#
+prototype(Konezciny.Site:Component.ProjectNav) < prototype(Neos.Fusion:Component) {
+    others = ${q(documentNode).siblings('[instanceof Konezciny.Site:Document.Project]').get()}
+    parentUri = Neos.Neos:NodeUri {
+        node = ${q(documentNode).parent().get(0)}
+    }
+
+    renderer = afx`
+        <section class="kz-section kz-moreprojects" @if.has={Array.length(props.others) > 0}>
+            <div class="kz-container">
+                <div class="kz-moreprojects__head">
+                    <h2 class="kz-h2">Weitere Projekte</h2>
+                    <a class="kz-link" href={props.parentUri}>Alle Projekte <Konezciny.Site:Helper.Icon name="arrow" /></a>
+                </div>
+                <div class="kz-projects kz-projects--compact">
+                    <Neos.Fusion:Loop items={Array.slice(props.others, 0, 3)} itemName="project">
+                        <Konezciny.Site:Component.ProjectCard project={project} />
+                    </Neos.Fusion:Loop>
+                </div>
+            </div>
+        </section>
+    `
+}
+
+prototype(Konezciny.Site:Component.Footer) < prototype(Neos.Fusion:Component) {
+    pages = ${q(site).children('[instanceof Konezciny.Site:Document.Page]').get()}
+    projects = ${q(site).find('[instanceof Konezciny.Site:Document.Project]').get()}
+
+    renderer = afx`
+        <footer class="kz-footer">
+            <div class="kz-container kz-footer__grid">
+                <div class="kz-footer__brand">
+                    <span class="kz-logo">
+                        <span class="kz-logo__mark" aria-hidden="true">pk</span>
+                        <span class="kz-logo__text">konezciny<span>.com</span></span>
+                    </span>
+                    <p>Homelab, Web-Apps und Automatisierung. Selbst gehostet auf eigener Hardware – auch diese Website.</p>
+                </div>
+                <div class="kz-footer__col">
+                    <h4>Projekte</h4>
+                    <ul>
+                        <Neos.Fusion:Loop items={props.projects} itemName="p">
+                            <li><Neos.Neos:NodeLink node={p} /></li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                </div>
+                <div class="kz-footer__col">
+                    <h4>Seiten</h4>
+                    <ul>
+                        <Neos.Fusion:Loop items={props.pages} itemName="p">
+                            <li><Neos.Neos:NodeLink node={p} /></li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                </div>
+            </div>
+            <div class="kz-footer__legal">
+                <div class="kz-container kz-footer__legal-inner">
+                    <span>© 2026 Pascal Konezciny</span>
+                    <span class="kz-footer__made"><span class="kz-dot kz-dot--live"></span> läuft auf Neos 9 · Docker · eigener Serverraum</span>
+                </div>
+            </div>
+        </footer>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'kz-footer'
+            site = ${Neos.Caching.entryIdentifierForNode(site)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', site)}
+        }
+    }
+}

@@ -1,0 +1,246 @@
+'Konezciny.Site:Content':
+  abstract: true
+  superTypes:
+    'Neos.Neos:Content': true
+
+'Konezciny.Site:Mixin.Head':
+  abstract: true
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Dachzeile'
+    headline:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Text'
+            formatting:
+              strong: true
+              em: true
+              a: true
+              ul: true
+              ol: true
+              p: true
+              code: true
+    anchor:
+      type: string
+      ui:
+        label: 'Sprungmarke (ohne #)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+
+'Konezciny.Site:Mixin.Buttons':
+  abstract: true
+  ui:
+    inspector:
+      groups:
+        buttons:
+          label: 'Buttons'
+          icon: 'hand-pointer'
+          position: 30
+  properties:
+    primaryLabel:
+      type: string
+      ui:
+        label: 'Button 1 Text'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+    primaryLink:
+      type: string
+      ui:
+        label: 'Button 1 Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+    secondaryLabel:
+      type: string
+      ui:
+        label: 'Button 2 Text'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+    secondaryLink:
+      type: string
+      ui:
+        label: 'Button 2 Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+
+# Bühne mit Status-Terminal (listet die Projektseiten automatisch)
+'Konezciny.Site:Content.Hero':
+  superTypes:
+    'Konezciny.Site:Content': true
+    'Konezciny.Site:Mixin.Head': true
+    'Konezciny.Site:Mixin.Buttons': true
+  ui:
+    label: 'Bühne'
+    icon: 'terminal'
+  properties:
+    showTerminal:
+      type: boolean
+      defaultValue: true
+      ui:
+        label: 'Status-Terminal anzeigen'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+
+'Konezciny.Site:Content.Stats':
+  superTypes:
+    'Konezciny.Site:Content': true
+  ui:
+    label: 'Kennzahlen'
+    icon: 'chart-bar'
+  properties:
+    value1:
+      type: string
+      ui: &statInline
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+    label1:
+      type: string
+      ui: *statInline
+    value2:
+      type: string
+      ui: *statInline
+    label2:
+      type: string
+      ui: *statInline
+    value3:
+      type: string
+      ui: *statInline
+    label3:
+      type: string
+      ui: *statInline
+    value4:
+      type: string
+      ui: *statInline
+    label4:
+      type: string
+      ui: *statInline
+
+# Projektliste: zeigt alle Projektseiten der Website
+'Konezciny.Site:Content.ProjectList':
+  superTypes:
+    'Konezciny.Site:Content': true
+    'Konezciny.Site:Mixin.Head': true
+  ui:
+    label: 'Projektliste (automatisch)'
+    icon: 'th-large'
+
+'Konezciny.Site:Content.Features':
+  superTypes:
+    'Konezciny.Site:Content': true
+    'Konezciny.Site:Mixin.Head': true
+  ui:
+    label: 'Liste mit Symbolen'
+    icon: 'list'
+  childNodes:
+    items:
+      type: 'Konezciny.Site:Collection.Features'
+
+'Konezciny.Site:Collection.Features':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'Konezciny.Site:Content.Feature': true
+
+'Konezciny.Site:Content.Feature':
+  superTypes:
+    'Konezciny.Site:Content': true
+  ui:
+    label: 'Punkt'
+    icon: 'check'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Text'
+    icon:
+      type: string
+      defaultValue: 'check'
+      ui:
+        label: 'Symbol'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              check: { label: 'Haken' }
+              server: { label: 'Server' }
+              code: { label: 'Code' }
+              terminal: { label: 'Terminal' }
+              shield: { label: 'Schild' }
+              chart: { label: 'Diagramm' }
+              bot: { label: 'Bot / KI' }
+              film: { label: 'Film' }
+              home: { label: 'Haus' }
+              gamepad: { label: 'Spiel' }
+              calendar: { label: 'Kalender' }
+              globe: { label: 'Welt' }
+              cloud: { label: 'Wolke' }
+              bell: { label: 'Glocke' }
+              lock: { label: 'Schloss' }
+              database: { label: 'Datenbank' }
+              tv: { label: 'TV' }
+
+'Konezciny.Site:Content.Text':
+  superTypes:
+    'Konezciny.Site:Content': true
+    'Konezciny.Site:Mixin.Head': true
+  ui:
+    label: 'Text'
+    icon: 'align-left'
+  properties:
+    lead:
+      type: boolean
+      ui:
+        label: 'Einleitung (grössere Schrift)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+
+'Konezciny.Site:Content.Cta':
+  superTypes:
+    'Konezciny.Site:Content': true
+    'Konezciny.Site:Mixin.Head': true
+    'Konezciny.Site:Mixin.Buttons': true
+  ui:
+    label: 'Aufruf'
+    icon: 'bullhorn'

@@ -13,8 +13,9 @@ done
 
 flow() { runuser -u www-data -- ./flow "$@"; }
 echo "DB ok, Migrationen"
-flow doctrine:migrate
-flow cr:setup --content-repository default
-flow resource:publish
+# Fehler hier sollen den Start nicht verhindern (Webseite zeigt sie dann an)
+flow doctrine:migrate || echo "WARNUNG: doctrine:migrate fehlgeschlagen"
+flow cr:setup --content-repository default || { echo "WARNUNG: cr:setup fehlgeschlagen - Cache leeren und erneut"; flow flow:cache:flush --force; flow cr:setup --content-repository default || echo "WARNUNG: cr:setup erneut fehlgeschlagen"; }
+flow resource:publish || echo "WARNUNG: resource:publish fehlgeschlagen"
 
 exec "$@"

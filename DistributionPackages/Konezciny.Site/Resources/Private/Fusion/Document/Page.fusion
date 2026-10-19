@@ -1,0 +1,39 @@
+prototype(Konezciny.Site:Document.Page) < prototype(Neos.Fusion:Component) {
+    isHome = false
+
+    renderer = Neos.Neos:Page {
+        htmlTag.attributes.lang = 'de'
+        head {
+            metaViewport = '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            themeColor = '<meta name="theme-color" content="#0b0d12">'
+            robots = '<meta name="robots" content="noindex, nofollow">'
+            description = Neos.Fusion:Tag {
+                tagName = 'meta'
+                attributes.name = 'description'
+                attributes.content = ${q(documentNode).property('teaser') || 'Pascal Konezciny – Homelab, Web-Apps und Automatisierung, selbst gehostet.'}
+            }
+            fonts = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap">'
+            stylesheets.site = afx`<link rel="stylesheet" href={StaticResource.uri('Konezciny.Site', 'Public/Styles/main.css')} />`
+            javascripts.site = afx`<script src={StaticResource.uri('Konezciny.Site', 'Public/Scripts/main.js')} defer></script>`
+        }
+
+        bodyTag.attributes.class = ${props.isHome ? 'kz kz--home' : 'kz kz--sub'}
+
+        body = afx`
+            <a class="kz-skip" href="#main">Zum Inhalt springen</a>
+            <Konezciny.Site:Component.Header />
+            <main id="main" class="kz-main">
+                <Konezciny.Site:Component.PageHero @if.sub={!props.isHome} />
+                <Neos.Neos:ContentCollection nodePath="main" attributes.class={['kz-content']} />
+                <Konezciny.Site:Component.ProjectNav @if.project={q(documentNode).is('[instanceof Konezciny.Site:Document.Project]')} />
+            </main>
+            <Konezciny.Site:Component.Footer />
+        `
+    }
+}
+
+prototype(Konezciny.Site:Document.HomePage) < prototype(Konezciny.Site:Document.Page) {
+    isHome = true
+}
+
+prototype(Konezciny.Site:Document.Project) < prototype(Konezciny.Site:Document.Page)

@@ -1,0 +1,137 @@
+'Konezciny.Site:Document.Page':
+  superTypes:
+    'Neos.Neos:Document': true
+  ui:
+    label: 'Seite'
+    icon: 'file'
+    position: 10
+    inspector:
+      groups:
+        pagehero:
+          label: 'Seitenkopf'
+          icon: 'heading'
+          tab: default
+          position: 20
+  constraints:
+    nodeTypes:
+      '*': false
+      'Konezciny.Site:Document.Page': true
+      'Konezciny.Site:Document.Project': true
+      'Konezciny.Site:Document.HomePage': false
+  childNodes:
+    main:
+      type: 'Konezciny.Site:Collection.Main'
+  properties:
+    teaser:
+      type: string
+      ui:
+        label: 'Kurzbeschreibung'
+        reloadIfChanged: true
+        inspector:
+          group: pagehero
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+
+'Konezciny.Site:Document.HomePage':
+  superTypes:
+    'Neos.Neos:Site': true
+    'Konezciny.Site:Document.Page': true
+  ui:
+    label: 'Startseite'
+    icon: 'globe'
+
+'Konezciny.Site:Document.Project':
+  superTypes:
+    'Konezciny.Site:Document.Page': true
+  ui:
+    label: 'Projekt'
+    icon: 'rocket'
+    position: 20
+    inspector:
+      groups:
+        project:
+          label: 'Projekt'
+          icon: 'rocket'
+          tab: default
+          position: 10
+  constraints:
+    nodeTypes:
+      '*': false
+  properties:
+    status:
+      type: string
+      defaultValue: 'live'
+      ui:
+        label: 'Status'
+        reloadIfChanged: true
+        inspector:
+          group: project
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              live:
+                label: 'Live'
+              pilot:
+                label: 'Pilot'
+              dev:
+                label: 'In Entwicklung'
+              paused:
+                label: 'Pausiert'
+    tags:
+      type: string
+      ui:
+        label: 'Technik (mit Komma getrennt)'
+        reloadIfChanged: true
+        inspector:
+          group: project
+    projectUrl:
+      type: string
+      ui:
+        label: 'Adresse (öffentlich)'
+        reloadIfChanged: true
+        inspector:
+          group: project
+    icon:
+      type: string
+      defaultValue: 'code'
+      ui:
+        label: 'Symbol'
+        reloadIfChanged: true
+        inspector:
+          group: project
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              film: { label: 'Film' }
+              home: { label: 'Haus' }
+              gamepad: { label: 'Spiel' }
+              calendar: { label: 'Kalender' }
+              bot: { label: 'Bot' }
+              server: { label: 'Server' }
+              code: { label: 'Code' }
+              globe: { label: 'Welt' }
+    accent:
+      type: string
+      defaultValue: 'violet'
+      ui:
+        label: 'Akzentfarbe'
+        reloadIfChanged: true
+        inspector:
+          group: project
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              violet: { label: 'Violett' }
+              cyan: { label: 'Türkis' }
+              green: { label: 'Grün' }
+              amber: { label: 'Bernstein' }
+              pink: { label: 'Pink' }
+              red: { label: 'Rot' }
+
+'Konezciny.Site:Collection.Main':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'Konezciny.Site:Content': true
+      'Konezciny.Site:Content.Feature': false

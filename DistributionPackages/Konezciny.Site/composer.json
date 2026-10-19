@@ -1,0 +1,19 @@
+{
+    "name": "konezciny/site",
+    "type": "neos-site",
+    "description": "Website konezciny.com (Neos 9)",
+    "license": "proprietary",
+    "require": {
+        "neos/neos": "~9.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Konezciny\\Site\\": "Classes"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Konezciny.Site"
+        }
+    }
+}
