@@ -1,0 +1,540 @@
+# --- Basis + Mixins -------------------------------------------------------
+'WeltiFurrer.Site:Content':
+  abstract: true
+  superTypes:
+    'Neos.Neos:Content': true
+  ui:
+    group: 'general'
+
+'WeltiFurrer.Site:Mixin.Headline':
+  abstract: true
+  properties:
+    headline:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Titel'
+            autoparagraph: false
+
+'WeltiFurrer.Site:Mixin.Text':
+  abstract: true
+  properties:
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Text'
+            formatting:
+              strong: true
+              em: true
+              a: true
+              ul: true
+              ol: true
+              p: true
+
+'WeltiFurrer.Site:Mixin.Image':
+  abstract: true
+  ui:
+    inspector:
+      groups:
+        image:
+          label: 'Bild'
+          icon: 'image'
+          position: 20
+  properties:
+    image:
+      type: Neos\Media\Domain\Model\ImageInterface
+      ui:
+        label: 'Bild'
+        reloadIfChanged: true
+        inspector:
+          group: image
+    imageUrl:
+      type: string
+      ui:
+        label: 'Bild als URL (nur Entwurf)'
+        reloadIfChanged: true
+        inspector:
+          group: image
+
+'WeltiFurrer.Site:Mixin.Link':
+  abstract: true
+  ui:
+    inspector:
+      groups:
+        link:
+          label: 'Link'
+          icon: 'link'
+          position: 30
+  properties:
+    link:
+      type: string
+      ui:
+        label: 'Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: link
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+    linkLabel:
+      type: string
+      ui:
+        label: 'Linktext'
+        reloadIfChanged: true
+        inspector:
+          group: link
+
+
+# --- Hero -----------------------------------------------------------------
+'WeltiFurrer.Site:Content.Hero':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+    'WeltiFurrer.Site:Mixin.Image': true
+  ui:
+    label: 'Bühne (Hero)'
+    icon: 'image'
+    inspector:
+      groups:
+        buttons:
+          label: 'Buttons'
+          icon: 'hand-pointer'
+          position: 30
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Dachzeile'
+            autoparagraph: false
+    primaryLabel:
+      type: string
+      ui:
+        label: 'Button 1 Text'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+    primaryLink:
+      type: string
+      ui:
+        label: 'Button 1 Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+    secondaryLabel:
+      type: string
+      ui:
+        label: 'Button 2 Text'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+    secondaryLink:
+      type: string
+      ui:
+        label: 'Button 2 Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+    showQuoteForm:
+      type: boolean
+      defaultValue: true
+      ui:
+        label: 'Offerten-Rechner anzeigen'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+
+# --- Kennzahlen ------------------------------------------------------------
+'WeltiFurrer.Site:Content.Facts':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+  ui:
+    label: 'Kennzahlen'
+    icon: 'chart-bar'
+  properties:
+    value1:
+      type: string
+      ui: &factInline
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+    label1:
+      type: string
+      ui: *factInline
+    value2:
+      type: string
+      ui: *factInline
+    label2:
+      type: string
+      ui: *factInline
+    value3:
+      type: string
+      ui: *factInline
+    label3:
+      type: string
+      ui: *factInline
+    value4:
+      type: string
+      ui: *factInline
+    label4:
+      type: string
+      ui: *factInline
+
+# --- Leistungen (Kacheln) --------------------------------------------------
+'WeltiFurrer.Site:Content.ServiceGrid':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+  ui:
+    label: 'Leistungs-Kacheln'
+    icon: 'th-large'
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Dachzeile'
+    anchor:
+      type: string
+      ui:
+        label: 'Sprungmarke (ohne #)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+  childNodes:
+    items:
+      type: 'WeltiFurrer.Site:Collection.Cards'
+
+'WeltiFurrer.Site:Collection.Cards':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'WeltiFurrer.Site:Content.ServiceCard': true
+
+'WeltiFurrer.Site:Content.ServiceCard':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Text': true
+    'WeltiFurrer.Site:Mixin.Image': true
+    'WeltiFurrer.Site:Mixin.Link': true
+  ui:
+    label: 'Leistungs-Kachel'
+    icon: 'square'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+
+# --- Text + Bild -----------------------------------------------------------
+'WeltiFurrer.Site:Content.TextImage':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+    'WeltiFurrer.Site:Mixin.Image': true
+    'WeltiFurrer.Site:Mixin.Link': true
+  ui:
+    label: 'Text mit Bild'
+    icon: 'columns'
+    inspector:
+      groups:
+        layout:
+          label: 'Darstellung'
+          icon: 'palette'
+          position: 10
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Dachzeile'
+    imageRight:
+      type: boolean
+      ui:
+        label: 'Bild rechts'
+        reloadIfChanged: true
+        inspector:
+          group: layout
+    variant:
+      type: string
+      defaultValue: 'light'
+      ui:
+        label: 'Hintergrund'
+        reloadIfChanged: true
+        inspector:
+          group: layout
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              light:
+                label: 'Hell'
+              grey:
+                label: 'Grau'
+              dark:
+                label: 'Bordeaux'
+
+# --- Vorteile / Unterleistungen -------------------------------------------
+'WeltiFurrer.Site:Content.Features':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+  ui:
+    label: 'Vorteile / Liste'
+    icon: 'list'
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Dachzeile'
+    variant:
+      type: string
+      defaultValue: 'light'
+      ui:
+        label: 'Hintergrund'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              light:
+                label: 'Hell'
+              grey:
+                label: 'Grau'
+  childNodes:
+    items:
+      type: 'WeltiFurrer.Site:Collection.Features'
+
+'WeltiFurrer.Site:Collection.Features':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'WeltiFurrer.Site:Content.Feature': true
+
+'WeltiFurrer.Site:Content.Feature':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Text': true
+    'WeltiFurrer.Site:Mixin.Link': true
+  ui:
+    label: 'Vorteil / Punkt'
+    icon: 'check'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+    icon:
+      type: string
+      defaultValue: 'check'
+      ui:
+        label: 'Symbol'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              check:
+                label: 'Haken'
+              truck:
+                label: 'Lastwagen'
+              building:
+                label: 'Gebäude'
+              box:
+                label: 'Kiste / Lager'
+              art:
+                label: 'Kunst'
+              crane:
+                label: 'Kran'
+              leaf:
+                label: 'Umwelt'
+              shield:
+                label: 'Sicherheit'
+              globe:
+                label: 'Welt'
+              clock:
+                label: 'Zeit'
+              people:
+                label: 'Team'
+
+# --- News -----------------------------------------------------------------
+'WeltiFurrer.Site:Content.NewsList':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+  ui:
+    label: 'News'
+    icon: 'newspaper'
+  childNodes:
+    items:
+      type: 'WeltiFurrer.Site:Collection.News'
+
+'WeltiFurrer.Site:Collection.News':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'WeltiFurrer.Site:Content.NewsItem': true
+
+'WeltiFurrer.Site:Content.NewsItem':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Text': true
+    'WeltiFurrer.Site:Mixin.Image': true
+    'WeltiFurrer.Site:Mixin.Link': true
+  ui:
+    label: 'News-Eintrag'
+    icon: 'file-alt'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+    date:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Datum'
+    category:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Kategorie'
+
+# --- Aufruf (CTA) ----------------------------------------------------------
+'WeltiFurrer.Site:Content.CtaBand':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+    'WeltiFurrer.Site:Mixin.Link': true
+  ui:
+    label: 'Aufruf (Kontakt)'
+    icon: 'bullhorn'
+  properties:
+    phone:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Telefon'
+    anchor:
+      type: string
+      ui:
+        label: 'Sprungmarke (ohne #)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+
+# --- Fliesstext ------------------------------------------------------------
+'WeltiFurrer.Site:Content.Text':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+  ui:
+    label: 'Text'
+    icon: 'align-left'
+  properties:
+    lead:
+      type: boolean
+      ui:
+        label: 'Einleitung (grössere Schrift)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+
+# --- Standorte -------------------------------------------------------------
+'WeltiFurrer.Site:Content.LocationList':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Headline': true
+    'WeltiFurrer.Site:Mixin.Text': true
+  ui:
+    label: 'Standorte'
+    icon: 'map-marker-alt'
+  childNodes:
+    items:
+      type: 'WeltiFurrer.Site:Collection.Locations'
+
+'WeltiFurrer.Site:Collection.Locations':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'WeltiFurrer.Site:Content.Location': true
+
+'WeltiFurrer.Site:Content.Location':
+  superTypes:
+    'WeltiFurrer.Site:Content': true
+    'WeltiFurrer.Site:Mixin.Text': true
+  ui:
+    label: 'Standort'
+    icon: 'map-marker'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Standort'
+    phone:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Telefon'

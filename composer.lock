@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "058852bd85988af6ab4746889aeee177",
+    "content-hash": "0becd77b438434faf8b3431086d65f6b",
     "packages": [
         {
             "name": "behat/transliterator",
@@ -9332,6 +9332,36 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.12.1"
             },
             "time": "2025-10-29T15:56:20+00:00"
+        },
+        {
+            "name": "weltifurrer/site",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./DistributionPackages/WeltiFurrer.Site",
+                "reference": "16718aab44c929a739f18a659c9baecf6317320e"
+            },
+            "require": {
+                "neos/neos": "~9.2.0"
+            },
+            "type": "neos-site",
+            "extra": {
+                "neos": {
+                    "package-key": "WeltiFurrer.Site"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "WeltiFurrer\\Site\\": "Classes"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Entwurf neue Website Welti-Furrer (Neos 9)",
+            "transport-options": {
+                "relative": true
+            }
         }
     ],
     "packages-dev": [
@@ -12534,7 +12564,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "weltifurrer/site": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {},

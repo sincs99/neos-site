@@ -1,0 +1,103 @@
+prototype(WeltiFurrer.Site:Component.Footer) < prototype(Neos.Fusion:Component) {
+    pages = ${q(site).children('[instanceof WeltiFurrer.Site:Document.Page]').get()}
+
+    renderer = afx`
+        <footer class="wf-footer">
+            <div class="wf-container wf-footer__grid">
+                <div class="wf-footer__brand">
+                    <img class="wf-footer__logo" src="https://www.welti-furrer.ch/wp-content/uploads/2018/04/logo.svg" alt="Welti-Furrer" width="170" height="43" loading="lazy" />
+                    <p>Umzüge, Lagerung und Logistik aus einer Hand – in der Schweiz und weltweit. Seit 1838.</p>
+                    <a class="wf-footer__phone" href="tel:+41444441111">
+                        <WeltiFurrer.Site:Helper.Icon name="phone" />
+                        +41 44 444 11 11
+                    </a>
+                </div>
+                <div class="wf-footer__col">
+                    <h4>Leistungen</h4>
+                    <ul>
+                        <Neos.Fusion:Loop items={props.pages} itemName="page">
+                            <li><Neos.Neos:NodeLink node={page} /></li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                </div>
+                <div class="wf-footer__col">
+                    <h4>Unternehmen</h4>
+                    <ul>
+                        <li><a href="#">News</a></li>
+                        <li><a href="#">Karriere</a></li>
+                        <li><a href="#">Ausbildung</a></li>
+                        <li><a href="#">Shop</a></li>
+                        <li><a href="#">Schadensabwicklung</a></li>
+                    </ul>
+                </div>
+                <div class="wf-footer__col">
+                    <h4>Folgen Sie uns</h4>
+                    <ul class="wf-footer__social">
+                        <li><a href="https://ch.linkedin.com/company/welti-furrer-fine-art" rel="noopener" target="_blank">LinkedIn</a></li>
+                        <li><a href="https://www.facebook.com/weltifurrerpneukran" rel="noopener" target="_blank">Facebook</a></li>
+                        <li><a href="https://www.youtube.com/channel/UCgKr8Z27h8kHjauR6jqKQPQ" rel="noopener" target="_blank">YouTube</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="wf-footer__legal">
+                <div class="wf-container wf-footer__legal-inner">
+                    <span>© 2026 Welti-Furrer AG</span>
+                    <nav aria-label="Rechtliches">
+                        <a href="#">AGB</a>
+                        <a href="#">Verhaltenskodex</a>
+                        <a href="#">Impressum</a>
+                        <a href="#">Datenschutz</a>
+                    </nav>
+                    <span class="wf-draft-badge">Entwurf · nicht öffentlich</span>
+                </div>
+            </div>
+        </footer>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'wf-footer'
+            site = ${Neos.Caching.entryIdentifierForNode(site)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', site)}
+        }
+    }
+}
+
+##
+# Offerten-Rechner (nur Gestaltung, sendet nichts)
+#
+prototype(WeltiFurrer.Site:Component.QuoteCard) < prototype(Neos.Fusion:Component) {
+    renderer = afx`
+        <div class="wf-quote" data-wf-quote>
+            <p class="wf-quote__title">Ihre Offertenanfrage</p>
+            <div class="wf-quote__tabs" role="tablist">
+                <button type="button" class="is-active" data-wf-tab>Privatumzug</button>
+                <button type="button" data-wf-tab>Geschäftsumzug</button>
+                <button type="button" data-wf-tab>Lagerung</button>
+                <button type="button" data-wf-tab>Kunst</button>
+            </div>
+            <form class="wf-quote__form" action="#" onsubmit="return false;">
+                <label>Von (PLZ / Ort)<input type="text" placeholder="z. B. 8001 Zürich" /></label>
+                <label>Nach (PLZ / Ort)<input type="text" placeholder="z. B. 3011 Bern" /></label>
+                <div class="wf-quote__row">
+                    <label>Zimmer
+                        <select>
+                            <option>1 – 1,5</option>
+                            <option>2 – 2,5</option>
+                            <option selected>3 – 3,5</option>
+                            <option>4 – 4,5</option>
+                            <option>5 und mehr</option>
+                        </select>
+                    </label>
+                    <label>Wunschtermin<input type="date" /></label>
+                </div>
+                <label class="wf-quote__check"><input type="checkbox" /> Umzug inkl. Endreinigung</label>
+                <button type="submit" class="wf-btn wf-btn--accent wf-btn--block">Offerte anfragen</button>
+                <p class="wf-quote__note">Unverbindlich · Ihr persönlicher Berater meldet sich bei Ihnen</p>
+            </form>
+        </div>
+    `
+}

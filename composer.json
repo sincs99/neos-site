@@ -27,7 +27,8 @@
         "neos/contentgraph-doctrinedbaladapter": "~9.2.0",
         "neos/neos-ui": "~9.2.0",
         "neos/seo": "~4.1",
-        "neos/demo": "~9.2.0"
+        "neos/demo": "~9.2.0",
+        "weltifurrer/site": "@dev"
     },
     "require-dev": {
         "neos/buildessentials": "~9.2.0",

@@ -1,0 +1,104 @@
+prototype(WeltiFurrer.Site:Component.Header) < prototype(Neos.Fusion:Component) {
+    homeUri = Neos.Neos:NodeUri {
+        node = ${site}
+    }
+    menuItems = Neos.Neos:MenuItems {
+        maximumLevels = 2
+    }
+    aboutUri = Neos.Neos:NodeUri {
+        node = ${q(site).children('[uriPathSegment="ueber-uns"]').get(0)}
+        @if.exists = ${q(site).children('[uriPathSegment="ueber-uns"]').count() > 0}
+    }
+    contactUri = Neos.Neos:NodeUri {
+        node = ${q(site).children('[uriPathSegment="kontakt"]').get(0)}
+        @if.exists = ${q(site).children('[uriPathSegment="kontakt"]').count() > 0}
+    }
+
+    renderer = afx`
+        <div class="wf-topbar">
+            <div class="wf-container wf-topbar__inner">
+                <span class="wf-topbar__claim">Ihr Spezialist – seit 1838</span>
+                <nav class="wf-topbar__links" aria-label="Service">
+                    <a href={props.aboutUri}>Über uns</a>
+                    <a href="#">Karriere</a>
+                    <a href="#">Shop</a>
+                    <a href={props.contactUri}>Standorte</a>
+                    <a class="wf-topbar__phone" href="tel:+41444441111">
+                        <WeltiFurrer.Site:Helper.Icon name="phone" />
+                        +41 44 444 11 11
+                    </a>
+                    <span class="wf-lang"><strong>DE</strong><span aria-hidden="true">/</span><a href="#">EN</a></span>
+                </nav>
+            </div>
+        </div>
+        <header class="wf-header" data-wf-header>
+            <div class="wf-container wf-header__inner">
+                <a class="wf-logo" href={props.homeUri} aria-label="Welti-Furrer Startseite">
+                    <img src="https://www.welti-furrer.ch/wp-content/uploads/2018/04/logo.svg" alt="Welti-Furrer" width="190" height="48" />
+                </a>
+                <button class="wf-burger" type="button" aria-label="Menü öffnen" aria-expanded="false" data-wf-burger>
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="wf-nav" aria-label="Hauptnavigation" data-wf-nav>
+                    <ul class="wf-nav__list">
+                        <Neos.Fusion:Loop items={props.menuItems} itemName="item">
+                            <li class={'wf-nav__item' + ((item.state && (item.state.value == 'current' || item.state.value == 'active')) ? ' is-active' : '') + ((Type.isArray(item.subItems) && Array.length(item.subItems) > 0) ? ' has-sub' : '')}>
+                                <a class="wf-nav__link" href={item.uri}>{item.label}</a>
+                                <ul class="wf-nav__sub" @if.has={Type.isArray(item.subItems) && Array.length(item.subItems) > 0}>
+                                    <Neos.Fusion:Loop items={item.subItems} itemName="sub">
+                                        <li><a href={sub.uri}>{sub.label}</a></li>
+                                    </Neos.Fusion:Loop>
+                                </ul>
+                            </li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                    <a class="wf-btn wf-btn--primary wf-nav__cta" href="#offerte">Offerte anfragen</a>
+                </nav>
+            </div>
+        </header>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'wf-header'
+            documentNode = ${Neos.Caching.entryIdentifierForNode(documentNode)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', documentNode)}
+        }
+    }
+}
+
+##
+# Seitenkopf der Unterseiten: Bild, Brotkrumen, Titel, Untertitel
+#
+prototype(WeltiFurrer.Site:Component.PageHero) < prototype(Neos.Fusion:Component) {
+    title = Neos.Neos:Editable {
+        node = ${documentNode}
+        property = 'title'
+        block = false
+    }
+    subtitle = ${q(documentNode).property('heroSubtitle')}
+    imageSrc = WeltiFurrer.Site:Helper.ImageSrc {
+        node = ${documentNode}
+        property = 'heroImage'
+        urlProperty = 'heroImageUrl'
+        width = 2200
+    }
+    breadcrumb = Neos.Neos:BreadcrumbMenuItems
+
+    renderer = afx`
+        <section class={'wf-pagehero' + (props.imageSrc ? ' wf-pagehero--image' : '')} style={props.imageSrc ? '--wf-hero-img: url(' + props.imageSrc + ')' : null}>
+            <div class="wf-container wf-pagehero__inner">
+                <nav class="wf-breadcrumb" aria-label="Brotkrumen">
+                    <Neos.Fusion:Loop items={props.breadcrumb} itemName="crumb">
+                        <a href={crumb.uri}>{crumb.label}</a>
+                    </Neos.Fusion:Loop>
+                </nav>
+                <h1 class="wf-pagehero__title">{props.title}</h1>
+                <p class="wf-pagehero__subtitle" @if.has={props.subtitle}>{props.subtitle}</p>
+            </div>
+        </section>
+    `
+}

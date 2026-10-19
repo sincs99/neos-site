@@ -1,0 +1,19 @@
+{
+    "name": "weltifurrer/site",
+    "type": "neos-site",
+    "description": "Entwurf neue Website Welti-Furrer (Neos 9)",
+    "license": "proprietary",
+    "require": {
+        "neos/neos": "~9.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WeltiFurrer\\Site\\": "Classes"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "WeltiFurrer.Site"
+        }
+    }
+}

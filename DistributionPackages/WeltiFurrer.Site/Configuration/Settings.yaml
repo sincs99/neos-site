@@ -1,0 +1,18 @@
+Neos:
+  Neos:
+    sites:
+      # Site-Knoten "welti-furrer": Deutsch ist Standard ("/" zeigt Deutsch)
+      'welti-furrer':
+        preset: default
+        contentDimensions:
+          defaultDimensionSpacePoint:
+            language: de
+          resolver:
+            factoryClassName: Neos\Neos\FrontendRouting\DimensionResolution\Resolver\UriPathResolverFactory
+            options:
+              segments:
+                - dimensionIdentifier: language
+                  dimensionValueMapping:
+                    de: de
+                    en_US: en
+                    en_GB: uk

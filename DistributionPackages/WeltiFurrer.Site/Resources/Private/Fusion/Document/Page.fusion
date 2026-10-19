@@ -1,0 +1,30 @@
+prototype(WeltiFurrer.Site:Document.Page) < prototype(Neos.Fusion:Component) {
+    isHome = false
+
+    renderer = Neos.Neos:Page {
+        head {
+            metaViewport = '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            themeColor = '<meta name="theme-color" content="#932541">'
+            robots = '<meta name="robots" content="noindex, nofollow">'
+            fonts = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap">'
+            stylesheets.site = afx`<link rel="stylesheet" href={StaticResource.uri('WeltiFurrer.Site', 'Public/Styles/main.css')} />`
+            javascripts.site = afx`<script src={StaticResource.uri('WeltiFurrer.Site', 'Public/Scripts/main.js')} defer></script>`
+        }
+
+        bodyTag.attributes.class = ${props.isHome ? 'wf wf--home' : 'wf wf--sub'}
+
+        body = afx`
+            <a class="wf-skip" href="#main">Zum Inhalt springen</a>
+            <WeltiFurrer.Site:Component.Header />
+            <main id="main" class="wf-main">
+                <WeltiFurrer.Site:Component.PageHero @if.sub={!props.isHome} />
+                <Neos.Neos:ContentCollection nodePath="main" attributes.class={['wf-content']} />
+            </main>
+            <WeltiFurrer.Site:Component.Footer />
+        `
+    }
+}
+
+prototype(WeltiFurrer.Site:Document.HomePage) < prototype(WeltiFurrer.Site:Document.Page) {
+    isHome = true
+}

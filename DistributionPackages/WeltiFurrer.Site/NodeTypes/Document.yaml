@@ -1,0 +1,65 @@
+'WeltiFurrer.Site:Document.Page':
+  superTypes:
+    'Neos.Neos:Document': true
+  ui:
+    label: 'Seite'
+    icon: 'file'
+    position: 10
+    inspector:
+      groups:
+        pagehero:
+          label: 'Seitenkopf'
+          icon: 'image'
+          tab: default
+          position: 20
+  constraints:
+    nodeTypes:
+      '*': false
+      'WeltiFurrer.Site:Document.Page': true
+      'WeltiFurrer.Site:Document.HomePage': false
+  childNodes:
+    main:
+      type: 'WeltiFurrer.Site:Collection.Main'
+  properties:
+    heroSubtitle:
+      type: string
+      ui:
+        label: 'Untertitel'
+        reloadIfChanged: true
+        inspector:
+          group: pagehero
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+    heroImage:
+      type: Neos\Media\Domain\Model\ImageInterface
+      ui:
+        label: 'Kopfbild'
+        reloadIfChanged: true
+        inspector:
+          group: pagehero
+    heroImageUrl:
+      type: string
+      ui:
+        label: 'Kopfbild als URL (nur Entwurf)'
+        reloadIfChanged: true
+        inspector:
+          group: pagehero
+
+'WeltiFurrer.Site:Document.HomePage':
+  superTypes:
+    'Neos.Neos:Site': true
+    'WeltiFurrer.Site:Document.Page': true
+  ui:
+    label: 'Startseite'
+    icon: 'globe'
+
+'WeltiFurrer.Site:Collection.Main':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'WeltiFurrer.Site:Content': true
+      'WeltiFurrer.Site:Content.ServiceCard': false
+      'WeltiFurrer.Site:Content.Feature': false
+      'WeltiFurrer.Site:Content.NewsItem': false
+      'WeltiFurrer.Site:Content.Location': false

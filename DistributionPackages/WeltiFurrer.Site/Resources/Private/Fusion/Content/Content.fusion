@@ -1,0 +1,406 @@
+##
+# Bühne (Hero) mit Bild, Buttons und Offerten-Rechner
+#
+prototype(WeltiFurrer.Site:Content.Hero) < prototype(Neos.Neos:ContentComponent) {
+    kicker = Neos.Neos:Editable {
+        property = 'kicker'
+        block = false
+    }
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    imageSrc = WeltiFurrer.Site:Helper.ImageSrc {
+        width = 2400
+    }
+    primaryLabel = ${q(node).property('primaryLabel')}
+    primaryLink = ${q(node).property('primaryLink')}
+    secondaryLabel = ${q(node).property('secondaryLabel')}
+    secondaryLink = ${q(node).property('secondaryLink')}
+    showQuoteForm = ${q(node).property('showQuoteForm')}
+
+    renderer = afx`
+        <section class="wf-hero" style={props.imageSrc ? '--wf-hero-img: url(' + props.imageSrc + ')' : null}>
+            <div class="wf-container wf-hero__inner">
+                <div class="wf-hero__copy">
+                    <p class="wf-kicker wf-kicker--accent">{props.kicker}</p>
+                    <h1 class="wf-hero__title">{props.headline}</h1>
+                    <div class="wf-hero__text">{props.text}</div>
+                    <div class="wf-hero__actions">
+                        <a class="wf-btn wf-btn--accent" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
+                        <a class="wf-btn wf-btn--ghost" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+                    </div>
+                </div>
+                <WeltiFurrer.Site:Component.QuoteCard @if.show={props.showQuoteForm} />
+            </div>
+        </section>
+    `
+    renderer.@process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Kennzahlen-Band
+#
+prototype(WeltiFurrer.Site:Content.Facts) < prototype(Neos.Neos:ContentComponent) {
+    v1 = Neos.Neos:Editable {
+        property = 'value1'
+        block = false
+    }
+    l1 = Neos.Neos:Editable {
+        property = 'label1'
+        block = false
+    }
+    v2 = Neos.Neos:Editable {
+        property = 'value2'
+        block = false
+    }
+    l2 = Neos.Neos:Editable {
+        property = 'label2'
+        block = false
+    }
+    v3 = Neos.Neos:Editable {
+        property = 'value3'
+        block = false
+    }
+    l3 = Neos.Neos:Editable {
+        property = 'label3'
+        block = false
+    }
+    v4 = Neos.Neos:Editable {
+        property = 'value4'
+        block = false
+    }
+    l4 = Neos.Neos:Editable {
+        property = 'label4'
+        block = false
+    }
+
+    renderer = afx`
+        <section class="wf-facts">
+            <div class="wf-container wf-facts__grid">
+                <div class="wf-fact"><span class="wf-fact__value">{props.v1}</span><span class="wf-fact__label">{props.l1}</span></div>
+                <div class="wf-fact"><span class="wf-fact__value">{props.v2}</span><span class="wf-fact__label">{props.l2}</span></div>
+                <div class="wf-fact"><span class="wf-fact__value">{props.v3}</span><span class="wf-fact__label">{props.l3}</span></div>
+                <div class="wf-fact"><span class="wf-fact__value">{props.v4}</span><span class="wf-fact__label">{props.l4}</span></div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Leistungs-Kacheln
+#
+prototype(WeltiFurrer.Site:Content.ServiceGrid) < prototype(Neos.Neos:ContentComponent) {
+    kicker = Neos.Neos:Editable {
+        property = 'kicker'
+        block = false
+    }
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    anchor = ${q(node).property('anchor') || null}
+
+    renderer = afx`
+        <section class="wf-section wf-services" id={props.anchor}>
+            <div class="wf-container">
+                <WeltiFurrer.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['wf-cards']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(WeltiFurrer.Site:Content.ServiceCard) < prototype(Neos.Neos:ContentComponent) {
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    imageSrc = WeltiFurrer.Site:Helper.ImageSrc {
+        width = 900
+    }
+    link = ${q(node).property('link')}
+    linkLabel = ${q(node).property('linkLabel') || 'Mehr erfahren'}
+
+    renderer = afx`
+        <article class="wf-card">
+            <a class="wf-card__media" href={props.link} tabindex="-1" aria-hidden="true">
+                <img @if.has={props.imageSrc} src={props.imageSrc} alt="" loading="lazy" />
+            </a>
+            <div class="wf-card__body">
+                <h3 class="wf-card__title">{props.title}</h3>
+                <div class="wf-card__text">{props.text}</div>
+                <a class="wf-link" href={props.link}>{props.linkLabel}<WeltiFurrer.Site:Helper.Icon name="arrow" /></a>
+            </div>
+        </article>
+    `
+    renderer.@process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Text mit Bild (hell, grau oder bordeaux)
+#
+prototype(WeltiFurrer.Site:Content.TextImage) < prototype(Neos.Neos:ContentComponent) {
+    kicker = Neos.Neos:Editable {
+        property = 'kicker'
+        block = false
+    }
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    imageSrc = WeltiFurrer.Site:Helper.ImageSrc {
+        width = 1400
+    }
+    imageRight = ${q(node).property('imageRight')}
+    variant = ${q(node).property('variant') || 'light'}
+    link = ${q(node).property('link')}
+    linkLabel = ${q(node).property('linkLabel') || 'Mehr erfahren'}
+
+    renderer = afx`
+        <section class={'wf-section wf-textimage wf-textimage--' + props.variant + (props.imageRight ? ' wf-textimage--right' : '')}>
+            <div class="wf-container wf-textimage__inner">
+                <div class="wf-textimage__media">
+                    <img @if.has={props.imageSrc} src={props.imageSrc} alt="" loading="lazy" />
+                </div>
+                <div class="wf-textimage__copy">
+                    <p class="wf-kicker">{props.kicker}</p>
+                    <h2 class="wf-h2">{props.headline}</h2>
+                    <div class="wf-prose">{props.text}</div>
+                    <a @if.has={props.link} class={props.variant == 'dark' ? 'wf-btn wf-btn--accent' : 'wf-btn wf-btn--primary'} href={props.link}>{props.linkLabel}</a>
+                </div>
+            </div>
+        </section>
+    `
+    renderer.@process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Vorteile / Unterleistungen mit Symbolen
+#
+prototype(WeltiFurrer.Site:Content.Features) < prototype(Neos.Neos:ContentComponent) {
+    kicker = Neos.Neos:Editable {
+        property = 'kicker'
+        block = false
+    }
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    variant = ${q(node).property('variant') || 'light'}
+
+    renderer = afx`
+        <section class={'wf-section wf-features wf-features--' + props.variant}>
+            <div class="wf-container">
+                <WeltiFurrer.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['wf-featuregrid']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(WeltiFurrer.Site:Content.Feature) < prototype(Neos.Neos:ContentComponent) {
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    icon = ${q(node).property('icon') || 'check'}
+    link = ${q(node).property('link')}
+    linkLabel = ${q(node).property('linkLabel') || 'Mehr erfahren'}
+
+    renderer = afx`
+        <div class="wf-feature">
+            <span class="wf-feature__icon"><WeltiFurrer.Site:Helper.Icon name={props.icon} /></span>
+            <h3 class="wf-feature__title">{props.title}</h3>
+            <div class="wf-feature__text">{props.text}</div>
+            <a @if.has={props.link} class="wf-link" href={props.link}>{props.linkLabel}<WeltiFurrer.Site:Helper.Icon name="arrow" /></a>
+        </div>
+    `
+    renderer.@process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# News
+#
+prototype(WeltiFurrer.Site:Content.NewsList) < prototype(Neos.Neos:ContentComponent) {
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+
+    renderer = afx`
+        <section class="wf-section wf-news">
+            <div class="wf-container">
+                <WeltiFurrer.Site:Component.SectionHead kicker="News" headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['wf-newsgrid']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(WeltiFurrer.Site:Content.NewsItem) < prototype(Neos.Neos:ContentComponent) {
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    date = Neos.Neos:Editable {
+        property = 'date'
+        block = false
+    }
+    category = Neos.Neos:Editable {
+        property = 'category'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    imageSrc = WeltiFurrer.Site:Helper.ImageSrc {
+        width = 900
+    }
+    link = ${q(node).property('link')}
+
+    renderer = afx`
+        <article class="wf-newsitem">
+            <div class="wf-newsitem__media">
+                <img @if.has={props.imageSrc} src={props.imageSrc} alt="" loading="lazy" />
+                <span class="wf-newsitem__cat">{props.category}</span>
+            </div>
+            <div class="wf-newsitem__body">
+                <p class="wf-newsitem__date">{props.date}</p>
+                <h3 class="wf-newsitem__title">{props.title}</h3>
+                <div class="wf-newsitem__text">{props.text}</div>
+                <a class="wf-link" href={props.link}>Weiterlesen<WeltiFurrer.Site:Helper.Icon name="arrow" /></a>
+            </div>
+        </article>
+    `
+    renderer.@process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Aufruf-Band mit Telefon und Button
+#
+prototype(WeltiFurrer.Site:Content.CtaBand) < prototype(Neos.Neos:ContentComponent) {
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    phone = Neos.Neos:Editable {
+        property = 'phone'
+        block = false
+    }
+    phoneRaw = ${String.replace(q(node).property('phone') || '', ' ', '')}
+    link = ${q(node).property('link')}
+    linkLabel = ${q(node).property('linkLabel') || 'Offerte anfragen'}
+    anchor = ${q(node).property('anchor') || null}
+
+    renderer = afx`
+        <section class="wf-cta" id={props.anchor}>
+            <div class="wf-container wf-cta__inner">
+                <div class="wf-cta__copy">
+                    <h2 class="wf-h2">{props.headline}</h2>
+                    <div class="wf-cta__text">{props.text}</div>
+                </div>
+                <div class="wf-cta__actions">
+                    <a class="wf-cta__phone" href={'tel:' + props.phoneRaw}>
+                        <WeltiFurrer.Site:Helper.Icon name="phone" />
+                        <span>{props.phone}</span>
+                    </a>
+                    <a class="wf-btn wf-btn--accent" href={props.link}>{props.linkLabel}</a>
+                </div>
+            </div>
+        </section>
+    `
+    renderer.@process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Fliesstext
+#
+prototype(WeltiFurrer.Site:Content.Text) < prototype(Neos.Neos:ContentComponent) {
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    lead = ${q(node).property('lead')}
+
+    renderer = afx`
+        <section class={'wf-section wf-text' + (props.lead ? ' wf-text--lead' : '')}>
+            <div class="wf-container wf-container--narrow">
+                <h2 class="wf-h2">{props.headline}</h2>
+                <div class="wf-prose">{props.text}</div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Standorte
+#
+prototype(WeltiFurrer.Site:Content.LocationList) < prototype(Neos.Neos:ContentComponent) {
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+
+    renderer = afx`
+        <section class="wf-section wf-locations">
+            <div class="wf-container">
+                <WeltiFurrer.Site:Component.SectionHead kicker="Standorte" headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['wf-locationgrid']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(WeltiFurrer.Site:Content.Location) < prototype(Neos.Neos:ContentComponent) {
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    phone = Neos.Neos:Editable {
+        property = 'phone'
+        block = false
+    }
+
+    renderer = afx`
+        <div class="wf-location">
+            <span class="wf-location__icon"><WeltiFurrer.Site:Helper.Icon name="pin" /></span>
+            <h3 class="wf-location__title">{props.title}</h3>
+            <div class="wf-location__text">{props.text}</div>
+            <p class="wf-location__phone">{props.phone}</p>
+        </div>
+    `
+}
