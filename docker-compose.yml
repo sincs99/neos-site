@@ -1,0 +1,48 @@
+# Neos CMS Testinstanz auf WINSRV-Centauri (D:\stacks\neos)
+# Code/Design: dieses Repo (wird ins Image gebaut), Inhalte: Volumes neos-db + neos-persistent
+# Update: git pull, dann "docker compose up -d --build" per Einmal-Aufgabe Interactive (nicht per SSH)
+name: neos
+
+services:
+  neos:
+    build: .
+    image: neos-site:latest
+    container_name: neos
+    restart: unless-stopped
+    environment:
+      FLOW_CONTEXT: Production/Docker
+      DB_HOST: db
+      DB_NAME: neos
+      DB_USER: neos
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - neos-persistent:/app/Data/Persistent
+      - neos-logs:/app/Data/Logs
+    ports:
+      - "8081:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:10.11
+    container_name: neos-db
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_DATABASE: neos
+      MARIADB_USER: neos
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - neos-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  neos-db:
+  neos-persistent:
+  neos-logs:

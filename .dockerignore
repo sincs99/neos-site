@@ -1,0 +1,11 @@
+.env
+.git
+Packages
+Data
+Web
+bin
+flow
+flow.bat
+bootstrap
+*.log
+docker-compose.yml
