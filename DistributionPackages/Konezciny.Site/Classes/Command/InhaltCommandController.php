@@ -8,6 +8,7 @@ use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\DimensionSpace\OriginDimensionSpacePoint;
 use Neos\ContentRepository\Core\Feature\NodeCreation\Command\CreateNodeAggregateWithNode;
 use Neos\ContentRepository\Core\Feature\NodeCreation\Dto\NodeAggregateIdsByNodePaths;
+use Neos\ContentRepository\Core\Feature\NodeModification\Command\SetNodeProperties;
 use Neos\ContentRepository\Core\Feature\NodeModification\Dto\PropertyValuesToWrite;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
@@ -25,6 +26,15 @@ use Neos\Neos\Domain\Service\NodeTypeNameFactory;
  */
 class InhaltCommandController extends CommandController
 {
+    /** Kontakt nur über GitHub (Wunsch 19.10.2026: keine E-Mail-Adresse auf der Seite) */
+    private const GITHUB_CTA = [
+        'kicker' => 'Kontakt',
+        'headline' => 'Am besten über GitHub',
+        'text' => '<p>Dort findest du meine öffentlichen Projekte und kannst mich direkt erreichen.</p>',
+        'primaryLabel' => 'GitHub: sincs99',
+        'primaryLink' => 'https://github.com/sincs99',
+    ];
+
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
@@ -47,6 +57,51 @@ class InhaltCommandController extends CommandController
     {
         $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
             $this->seed($site, $language);
+        });
+    }
+
+    /**
+     * Kontaktblock der Seite "Kontakt" auf GitHub umstellen (E-Mail entfernen)
+     *
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function githubKontaktCommand(string $language = 'de'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($language) {
+            $cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+            $workspace = WorkspaceName::forLive();
+            $origin = OriginDimensionSpacePoint::fromArray(['language' => $language]);
+            $graph = $cr->getContentGraph($workspace);
+
+            $projekteLink = null;
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('Konezciny.Site:Document.Page')) as $page) {
+                if ($page->occupiesDimensionSpacePoint($origin)
+                    && $page->getNodeByOccupiedDimensionSpacePoint($origin)->getProperty('uriPathSegment') === 'projekte') {
+                    $projekteLink = 'node://' . $page->nodeAggregateId->value;
+                }
+            }
+
+            $changed = 0;
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('Konezciny.Site:Content.Cta')) as $cta) {
+                if (!$cta->occupiesDimensionSpacePoint($origin)) {
+                    continue;
+                }
+                $label = (string)$cta->getNodeByOccupiedDimensionSpacePoint($origin)->getProperty('primaryLabel');
+                if ($label !== 'E-Mail schreiben') {
+                    continue;
+                }
+                $cr->handle(SetNodeProperties::create(
+                    $workspace,
+                    $cta->nodeAggregateId,
+                    $origin,
+                    PropertyValuesToWrite::fromArray(self::GITHUB_CTA + [
+                        'secondaryLabel' => $projekteLink ? 'Alle Projekte' : null,
+                        'secondaryLink' => $projekteLink,
+                    ])
+                ));
+                $changed++;
+            }
+            $this->outputLine('Kontaktblöcke umgestellt: %d', [$changed]);
         });
     }
 
@@ -228,14 +283,9 @@ class InhaltCommandController extends CommandController
         $this->feature($values, 'globe', 'Aus der Ferne wartbar', 'Alles muss sich ohne Besuch im Serverraum reparieren lassen.');
         $this->cta($aboutMain);
 
-        $this->content($kontaktMain, 'Cta', [
-            'kicker' => 'Kontakt',
-            'headline' => 'Schreib mir',
-            'text' => '<p>Platzhalter: Kontaktadresse folgt.</p>',
-            'primaryLabel' => 'E-Mail schreiben',
-            'primaryLink' => '#',
-            'secondaryLabel' => 'GitHub',
-            'secondaryLink' => 'https://github.com/sincs99',
+        $this->content($kontaktMain, 'Cta', self::GITHUB_CTA + [
+            'secondaryLabel' => 'Alle Projekte',
+            'secondaryLink' => $this->projekteLink,
         ]);
 
         $this->outputLine('<success>Startinhalte angelegt.</success>');
