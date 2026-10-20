@@ -217,10 +217,10 @@ code { font-family: var(--sp-mono); }
 .sp-permissions { background: linear-gradient(180deg, var(--sp-sea), var(--sp-deep)); }
 .sp-permissions__inner { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 64px; align-items: start; }
 .sp-perms { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.sp-perms li { display: grid; grid-template-columns: 22px minmax(150px, auto) 1fr; gap: 12px; align-items: baseline; padding: 14px 18px; background: var(--sp-sea-2); border: 1px solid var(--sp-line); border-radius: 12px; }
-.sp-perms .sp-icon { color: var(--sp-green); transform: translateY(3px); }
+.sp-perms li { display: grid; grid-template-columns: 22px 1fr; column-gap: 12px; row-gap: 2px; align-items: start; padding: 14px 18px; background: var(--sp-sea-2); border: 1px solid var(--sp-line); border-radius: 12px; }
+.sp-perms .sp-icon { grid-row: span 2; color: var(--sp-green); margin-top: 3px; }
 .sp-perms strong { color: var(--sp-foam); font-weight: 600; }
-.sp-perms span { font-size: 15px; color: var(--sp-muted); }
+.sp-perms span { grid-column: 2; font-size: 15px; line-height: 1.45; color: var(--sp-muted); }
 
 /* Changelog */
 .sp-releases { position: relative; display: grid; gap: 18px; padding-left: 28px; border-left: 2px dashed rgba(233, 180, 76, .35); }
@@ -319,8 +319,6 @@ code { font-family: var(--sp-mono); }
     .sp-hero__inner { padding-top: 48px; }
     .sp-catgrid, .sp-categories--full .sp-catgrid { grid-template-columns: 1fr; }
     .sp-categories--full .sp-cat__cmds li { grid-template-columns: 1fr; gap: 4px; }
-    .sp-perms li { grid-template-columns: 22px 1fr; }
-    .sp-perms span { grid-column: 2; }
     .sp-cta__box { padding: 44px 22px; }
     .sp-footer__grid { grid-template-columns: 1fr; }
     .sp-logo__text { font-size: 26px; }
