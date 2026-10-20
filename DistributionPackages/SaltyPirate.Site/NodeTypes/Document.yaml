@@ -1,0 +1,79 @@
+'SaltyPirate.Site:Document.Page':
+  superTypes:
+    'Neos.Neos:Document': true
+  ui:
+    label: 'Seite'
+    icon: 'file'
+    position: 10
+    inspector:
+      groups:
+        pagehero:
+          label: 'Seitenkopf'
+          icon: 'heading'
+          tab: default
+          position: 20
+  constraints:
+    nodeTypes:
+      '*': false
+      'SaltyPirate.Site:Document.Page': true
+      'SaltyPirate.Site:Document.HomePage': false
+  childNodes:
+    main:
+      type: 'SaltyPirate.Site:Collection.Main'
+  properties:
+    teaser:
+      type: string
+      ui:
+        label: 'Kurzbeschreibung'
+        reloadIfChanged: true
+        inspector:
+          group: pagehero
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+
+# Startseite; Links für Einladung und Community-Server gelten für die ganze Website
+'SaltyPirate.Site:Document.HomePage':
+  superTypes:
+    'Neos.Neos:Site': true
+    'SaltyPirate.Site:Document.Page': true
+  ui:
+    label: 'Startseite'
+    icon: 'globe'
+    inspector:
+      groups:
+        links:
+          label: 'Bot-Links'
+          icon: 'link'
+          tab: default
+          position: 5
+  properties:
+    inviteUrl:
+      type: string
+      ui:
+        label: 'Einladungslink (Add to Discord)'
+        reloadIfChanged: true
+        inspector:
+          group: links
+    supportUrl:
+      type: string
+      ui:
+        label: 'Community-/Support-Server (discord.gg/...)'
+        reloadIfChanged: true
+        inspector:
+          group: links
+    version:
+      type: string
+      ui:
+        label: 'Aktuelle Version'
+        reloadIfChanged: true
+        inspector:
+          group: links
+
+'SaltyPirate.Site:Collection.Main':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'SaltyPirate.Site:Content': true
+      'SaltyPirate.Site:Content.Category': false
+      'SaltyPirate.Site:Content.Release': false

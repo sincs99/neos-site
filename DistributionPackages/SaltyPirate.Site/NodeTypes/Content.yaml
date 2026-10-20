@@ -1,0 +1,338 @@
+'SaltyPirate.Site:Content':
+  abstract: true
+  superTypes:
+    'Neos.Neos:Content': true
+
+'SaltyPirate.Site:Mixin.Head':
+  abstract: true
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Kicker'
+    headline:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Headline'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Text'
+            formatting:
+              strong: true
+              em: true
+              a: true
+              ul: true
+              p: true
+              code: true
+    anchor:
+      type: string
+      ui:
+        label: 'Sprungmarke (ohne #)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+
+# Nachgebaute Discord-Nachricht des Bots (Befehl, Embed, Buttons)
+'SaltyPirate.Site:Mixin.Mock':
+  abstract: true
+  ui:
+    inspector:
+      groups:
+        mock:
+          label: 'Discord-Vorschau'
+          icon: 'comment'
+          position: 20
+  properties:
+    mockCommand:
+      type: string
+      ui:
+        label: 'Befehl (z. B. /lfg ship:galleon)'
+        reloadIfChanged: true
+        inspector:
+          group: mock
+    mockTitle:
+      type: string
+      ui:
+        label: 'Embed-Titel'
+        reloadIfChanged: true
+        inspector:
+          group: mock
+    mockBody:
+      type: string
+      ui:
+        label: 'Embed-Zeilen (eine pro Zeile, „Feld: Wert“ wird fett)'
+        reloadIfChanged: true
+        inspector:
+          group: mock
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+    mockButtons:
+      type: string
+      ui:
+        label: 'Buttons (mit Komma getrennt)'
+        reloadIfChanged: true
+        inspector:
+          group: mock
+    mockColor:
+      type: string
+      defaultValue: 'blurple'
+      ui:
+        label: 'Embed-Farbe'
+        reloadIfChanged: true
+        inspector:
+          group: mock
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              blurple: { label: 'Blurple' }
+              gold: { label: 'Gold' }
+              teal: { label: 'Türkis' }
+              green: { label: 'Grün' }
+              red: { label: 'Rot' }
+              blue: { label: 'Blau' }
+
+'SaltyPirate.Site:Content.Hero':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+    'SaltyPirate.Site:Mixin.Mock': true
+  ui:
+    label: 'Bühne'
+    icon: 'anchor'
+
+'SaltyPirate.Site:Content.Stats':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+  ui:
+    label: 'Kennzahlen'
+    icon: 'chart-bar'
+  properties:
+    value1:
+      type: string
+      ui: &spInline
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+    label1:
+      type: string
+      ui: *spInline
+    value2:
+      type: string
+      ui: *spInline
+    label2:
+      type: string
+      ui: *spInline
+    value3:
+      type: string
+      ui: *spInline
+    label3:
+      type: string
+      ui: *spInline
+    value4:
+      type: string
+      ui: *spInline
+    label4:
+      type: string
+      ui: *spInline
+
+# Befehlsbereiche (Kacheln) mit Befehlsliste
+'SaltyPirate.Site:Content.Categories':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Befehlsbereiche'
+    icon: 'th-large'
+  properties:
+    showCommands:
+      type: boolean
+      ui:
+        label: 'Alle Befehle ausklappen (Befehlsseite)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+  childNodes:
+    items:
+      type: 'SaltyPirate.Site:Collection.Categories'
+
+'SaltyPirate.Site:Collection.Categories':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'SaltyPirate.Site:Content.Category': true
+
+'SaltyPirate.Site:Content.Category':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+  ui:
+    label: 'Befehlsbereich'
+    icon: 'folder'
+  properties:
+    emoji:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: '🧭'
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Bereich'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Wofür'
+    commands:
+      type: string
+      ui:
+        label: 'Befehle (eine Zeile pro Befehl: „/befehl | Beschreibung“)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+    accent:
+      type: string
+      defaultValue: 'gold'
+      ui:
+        label: 'Farbe'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              blurple: { label: 'Blurple' }
+              gold: { label: 'Gold' }
+              teal: { label: 'Türkis' }
+              green: { label: 'Grün' }
+              red: { label: 'Rot' }
+              blue: { label: 'Blau' }
+
+# Funktion mit Discord-Vorschau daneben
+'SaltyPirate.Site:Content.Showcase':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+    'SaltyPirate.Site:Mixin.Mock': true
+  ui:
+    label: 'Funktion mit Vorschau'
+    icon: 'columns'
+  properties:
+    mockLeft:
+      type: boolean
+      ui:
+        label: 'Vorschau links'
+        reloadIfChanged: true
+        inspector:
+          group: mock
+
+'SaltyPirate.Site:Content.Permissions':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Berechtigungen'
+    icon: 'shield-alt'
+  properties:
+    items:
+      type: string
+      ui:
+        label: 'Berechtigungen (eine Zeile: „Name | Wofür“)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+
+'SaltyPirate.Site:Content.Changelog':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Changelog'
+    icon: 'history'
+  childNodes:
+    items:
+      type: 'SaltyPirate.Site:Collection.Releases'
+
+'SaltyPirate.Site:Collection.Releases':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'SaltyPirate.Site:Content.Release': true
+
+'SaltyPirate.Site:Content.Release':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+  ui:
+    label: 'Version'
+    icon: 'tag'
+  properties:
+    version:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: '1.0.0'
+    date:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Datum'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Änderungen'
+            formatting:
+              ul: true
+              code: true
+              strong: true
+
+'SaltyPirate.Site:Content.Text':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Text'
+    icon: 'align-left'
+
+'SaltyPirate.Site:Content.Cta':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Aufruf (Einladen / Community)'
+    icon: 'bullhorn'

@@ -1,0 +1,333 @@
+<?php
+
+declare(strict_types=1);
+
+namespace SaltyPirate\Site\Command;
+
+use Neos\ContentRepository\Core\ContentRepository;
+use Neos\ContentRepository\Core\DimensionSpace\OriginDimensionSpacePoint;
+use Neos\ContentRepository\Core\Feature\NodeCreation\Command\CreateNodeAggregateWithNode;
+use Neos\ContentRepository\Core\Feature\NodeCreation\Dto\NodeAggregateIdsByNodePaths;
+use Neos\ContentRepository\Core\Feature\NodeModification\Command\SetNodeProperties;
+use Neos\ContentRepository\Core\Feature\NodeModification\Dto\PropertyValuesToWrite;
+use Neos\ContentRepository\Core\NodeType\NodeTypeName;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Security\Context as SecurityContext;
+use Neos\Neos\Domain\Service\NodeTypeNameFactory;
+
+/**
+ * Füllt die Site "saltypirate" mit den Startinhalten (aus README, CHANGELOG und Befehlsregister des Bots).
+ */
+class AhoiCommandController extends CommandController
+{
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
+
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
+
+    private ContentRepository $cr;
+    private WorkspaceName $workspace;
+    private OriginDimensionSpacePoint $origin;
+
+    /** Befehlsbereiche wie in commands/registry.py */
+    private const CATEGORIES = [
+        ['🧭', 'Start here', 'Guided tour, server settings and bot status.', 'blurple', [
+            '/discover | Guided tour of all features',
+            '/help | Command overview',
+            '/invite | Add the bot to your server, support server',
+            '/settings | Server settings (Manage Server)',
+            '/ping | Check if the bot is alive',
+            '/about | Bot and setup info',
+        ]],
+        ['🗺️', 'Navigation', 'Maps, islands, factions, Tall Tales, riddles, lanterns.', 'blue', [
+            '/map | Coordinates and region of an island',
+            '/island | Island details or the full list',
+            '/faction | Faction encyclopedia',
+            '/talltale | Tall Tale progression hints',
+            '/riddle | Riddle map help: landmarks and clue meanings',
+            '/lantern | Lantern color meanings',
+            '/skeleton | Skeleton enemy guide',
+        ]],
+        ['🎣', 'Survival', 'Fish, bait, food, cooking, Hunter’s Call, Megalodon.', 'green', [
+            '/fish | Fish overview or a specific fish',
+            '/bait | Bait for a fish or bait type',
+            '/food | Food overview or a specific item',
+            '/cook | Cook time and optional reminder',
+            '/hunterscall | Hunter’s Call tips',
+            '/megalodon | Megalodon survival tips',
+        ]],
+        ['⛵', 'Voyage', 'Commodities, routes, world events, trading companies.', 'gold', [
+            '/voyage | Voyage planning tips',
+            '/fort | Skeleton fort tips',
+            '/worldevent | Strategy briefing for a world event',
+            '/commodity | Merchant commodity helper',
+            '/trading | Trading company tips',
+            '/routes | Merchant route tips',
+        ]],
+        ['🏴‍☠️', 'Guild', 'Pirate profiles, roster, crews and reputation.', 'red', [
+            '/profile set | Your gamertag, platform, roles on board',
+            '/profile show | A member’s profile',
+            '/roster | Guild roster, filter by role or crew',
+            '/rep set | Log your reputation level',
+            '/rep show | Levels and weekly progress',
+            '/rep board | Ranking for one faction',
+            '/rep week | Level-ups of the last 7 days',
+            '/crew create | Create a crew with its role (admin)',
+            '/crew join | Ask to join a crew',
+            '/crew info | Members and captain of a crew',
+        ]],
+        ['🍻', 'Community', 'Crew finder, session planner, loot leaderboard, news.', 'teal', [
+            '/lfg | Crew finder with Join/Leave buttons',
+            '/session plan | Plan a session with RSVPs and reminders',
+            '/session list | Upcoming sessions',
+            '/loot log | Log your loot',
+            '/loot me | Your loot totals',
+            '/leaderboard | Server loot leaderboard',
+            '/news | Latest Sea of Thieves announcements',
+            '/stats | Milestone card for gold and coins',
+        ]],
+    ];
+
+    /** Versionen wie in CHANGELOG.md */
+    private const RELEASES = [
+        ['1.5.0', '2026-10-12', ['New: <code>/invite</code> – add Salty Pirate to your own server or join the support server', 'New: <code>/help</code> shows invite and support server buttons', 'New: updates like this one are announced automatically']],
+        ['1.4.0', '2026-10-12', ['New: crew voice channels – when an LFG crew fills up, the bot can open a temporary voice channel', 'New: planned sessions can show up under the server’s Events']],
+        ['1.3.0', '2026-10-12', ['New: <code>/session plan</code> with Going / Maybe / Can’t buttons and reminders 30 and 5 minutes before the start', 'New: <code>/loot log</code>, <code>/loot me</code>, <code>/loot undo</code> and a server <code>/leaderboard</code>']],
+        ['1.2.0', '2026-10-12', ['New: <code>/lfg</code> crew cards with Join / Leave / Close buttons', 'New: automatic Sea of Thieves news in a channel of your choice and <code>/news</code>']],
+        ['1.1.0', '2026-10-12', ['Improved: slash-first <code>/help</code>, clickable commands and a guided <code>/discover</code> tour', 'Fixed: cooking times, settings storage and world event timers per server']],
+        ['1.0.0', '2026-03-13', ['First release: islands, maps, factions, fish, bait, food, cooking timers, Tall Tales, riddles, world events and trading companies']],
+    ];
+
+    /**
+     * Startinhalte anlegen (nur wenn die Site noch leer ist)
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function anlegenCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
+            $this->seed($site, $language);
+        });
+    }
+
+    private function seed(string $siteName, string $language): void
+    {
+        $this->cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+        $this->workspace = WorkspaceName::forLive();
+        $this->origin = OriginDimensionSpacePoint::fromArray(['language' => $language]);
+
+        $graph = $this->cr->getContentGraph($this->workspace);
+        $sites = $graph->findRootNodeAggregateByType(NodeTypeNameFactory::forSites());
+        $site = $sites ? $graph->findChildNodeAggregateByName($sites->nodeAggregateId, NodeName::fromString($siteName)) : null;
+        if ($site === null) {
+            $this->outputLine('<error>Site "%s" nicht gefunden - zuerst ./flow site:create ausführen.</error>', [$siteName]);
+            $this->quit(1);
+        }
+        $homeMain = $graph->findChildNodeAggregateByName($site->nodeAggregateId, NodeName::fromString('main'));
+        if (count($graph->findChildNodeAggregates($homeMain->nodeAggregateId)) > 0
+            || count($graph->findChildNodeAggregates($site->nodeAggregateId)) > 1) {
+            $this->outputLine('<comment>Die Site hat schon Inhalte - nichts angelegt.</comment>');
+            return;
+        }
+        $home = $site->nodeAggregateId;
+
+        // Bot-Links und Version auf der Startseite (Links leer = "coming soon")
+        $this->cr->handle(SetNodeProperties::create($this->workspace, $home, $this->origin, PropertyValuesToWrite::fromArray([
+            'title' => 'Salty Pirate',
+            'version' => '1.5.0',
+            'inviteUrl' => '',
+            'supportUrl' => '',
+        ])));
+
+        // --- Seiten ------------------------------------------------------------
+        [, $commandsMain] = $this->page($home, 'Commands', 'commands', 'Every slash command Salty Pirate knows, grouped by what you need on your voyage.');
+        [, $changelogMain] = $this->page($home, 'Changelog', 'changelog', 'What’s new aboard – every release of Salty Pirate.');
+        [, $privacyMain] = $this->page($home, 'Privacy', 'privacy', 'What Salty Pirate stores about your server and members – and how to remove it.');
+
+        // --- Startseite --------------------------------------------------------
+        $main = $homeMain->nodeAggregateId;
+        $this->content($main, 'Hero', [
+            'kicker' => 'Sea of Thieves companion for Discord',
+            'headline' => 'Your crew’s <em>first mate</em> on Discord.',
+            'text' => '<p>Riddle help, island lookups, cooking timers, a crew finder and a session planner – Salty Pirate keeps your voyages on course, so your crew can focus on the plunder.</p>',
+            'mockCommand' => '/lfg ship:Galleon activity:Fort',
+            'mockTitle' => '⚓ Galleon crew · Fort',
+            'mockBody' => "Captain: Deckhand\nAboard: 2 / 4\nThe bot pings everyone as soon as the crew is full.",
+            'mockButtons' => 'Join, Leave, Close',
+            'mockColor' => 'blurple',
+        ]);
+        $this->content($main, 'Stats', [
+            'value1' => '50+', 'label1' => 'slash commands',
+            'value2' => '24', 'label2' => 'large islands with riddle help',
+            'value3' => '7', 'label3' => 'factions in the reputation tracker',
+            'value4' => '6', 'label4' => 'command categories',
+        ]);
+        $this->categories($main, false, 'features');
+
+        $this->content($main, 'Showcase', [
+            'kicker' => 'Crew finder',
+            'headline' => 'Find a crew in seconds',
+            'text' => '<p><code>/lfg</code> posts a crew card with <strong>Join</strong>, <strong>Leave</strong> and <strong>Close</strong> buttons and a live slot count – sloop 2, brigantine 3, galleon 4. When the crew is full, everyone gets a ping.</p><p>Optionally the bot opens a temporary voice channel for the crew and removes it again once everyone has left. Buttons keep working after a bot restart; posts expire after 6 hours.</p>',
+            'mockCommand' => '/lfg ship:Brigantine activity:Fort',
+            'mockTitle' => '⚓ Brigantine crew · Fort',
+            'mockBody' => "Aboard: 3 / 3 – crew is full!\nVoice: 🔊 Brigantine – Fort",
+            'mockButtons' => 'Join, Leave, Close',
+            'mockColor' => 'teal',
+        ]);
+        $this->content($main, 'Showcase', [
+            'kicker' => 'Session planner',
+            'headline' => 'Plan tonight’s voyage',
+            'text' => '<p><code>/session plan</code> posts a session card with <strong>Going</strong>, <strong>Maybe</strong> and <strong>Can’t</strong>. Everyone sees the start in their own timezone, and attendees are pinged 30 and 5 minutes before and at the start.</p><p>Type times the way you say them: <code>20:30</code>, <code>tomorrow 19:00</code>, <code>fri 21:00</code> or <code>in 2h</code>. If you like, sessions also show up under your server’s Events.</p>',
+            'mockCommand' => '/session plan activity:Gold Hoarders when:fri 21:00',
+            'mockTitle' => '🗓️ Gold Hoarders voyage',
+            'mockBody' => "When: Friday, 21:00 – shown in your local time\nReminders: 30 min, 5 min and at the start",
+            'mockButtons' => 'Going, Maybe, Can’t',
+            'mockColor' => 'gold',
+            'mockLeft' => true,
+        ]);
+        $this->content($main, 'Showcase', [
+            'kicker' => 'Riddle help',
+            'headline' => 'Stuck on a riddle?',
+            'text' => '<p><code>/riddle</code> covers 24 of the 25 large islands: the landmarks plus what each riddle line points to – and general steps for lanterns, music, paces, directions and digging on any island.</p><p>Just type words from your riddle into <code>clue:</code>. Matching is fuzzy, so <code>skull lantern</code> or <code>10 paces north</code> work.</p>',
+            'mockCommand' => '/riddle clue:10 paces north',
+            'mockTitle' => '🗺️ Riddle help',
+            'mockBody' => "Your clue: 10 paces north\nWhat it means: start at the landmark from the line before and count your paces facing north\nSteps: lantern · music · paces · directions · digging",
+            'mockButtons' => '',
+            'mockColor' => 'blue',
+        ]);
+        $this->content($main, 'Showcase', [
+            'kicker' => 'Guild tools',
+            'headline' => 'Run your guild like a fleet',
+            'text' => '<p>Members store their gamertag, platform, roles on board and play times with <code>/profile set</code>; <code>/roster</code> lists everyone. Admins create crews with their own Discord role and pick captains.</p><p>The reputation tracker logs levels for Gold Hoarders, Merchant Alliance, Order of Souls, Reaper’s Bones, Hunter’s Call, Athena’s Fortune and the Smugglers’ League – with a weekly summary every Monday.</p>',
+            'mockCommand' => '/rep week',
+            'mockTitle' => '🏴‍☠️ Level-ups this week',
+            'mockBody' => "Gold Hoarders: 2 pirates levelled up\nMerchant Alliance: 1 pirate levelled up\nPosted automatically every Monday at 09:00",
+            'mockButtons' => '',
+            'mockColor' => 'red',
+            'mockLeft' => true,
+        ]);
+        $this->content($main, 'Permissions', [
+            'kicker' => 'Fair winds, no surprises',
+            'headline' => 'Only the permissions it needs',
+            'text' => '<p>The invite link asks for exactly what the features use – nothing more. Server settings with <code>/settings</code> require the <strong>Manage Server</strong> permission.</p>',
+            'items' => "View channels & read history | to answer where the command was used\nSend messages & messages in threads | to post replies, cards and reminders\nEmbed links & attach files | for rich cards and island images\nUse external emojis | for nicer cards\nManage events | only if you turn on server events for sessions\nManage channels | only for temporary crew voice channels",
+        ]);
+        $this->changelog($main, 3);
+        $this->cta($main);
+
+        // --- Unterseiten -------------------------------------------------------
+        $this->categories($commandsMain, true, 'commands');
+        $this->content($commandsMain, 'Text', [
+            'kicker' => 'Good to know',
+            'headline' => 'Prefix commands still work',
+            'text' => '<p>Slash commands are the main way to use Salty Pirate. Prefix commands like <code>$fish</code> still work as a fallback – the world event timer <code>$event fort|fleet|ashen</code> is prefix-only.</p>',
+        ]);
+        $this->cta($commandsMain);
+
+        $this->changelog($changelogMain, count(self::RELEASES));
+        $this->cta($changelogMain);
+
+        $this->content($privacyMain, 'Text', [
+            'kicker' => 'Draft – to be reviewed',
+            'headline' => 'What Salty Pirate stores',
+            'text' => '<p>Salty Pirate runs on our own server. To make its features work, it stores per Discord server:</p><ul><li><strong>Server settings</strong> such as channels and timezone</li><li><strong>LFG posts, sessions</strong> and world event timers</li><li><strong>Pirate profiles</strong> (gamertag, platform, roles, play times) that members enter themselves</li><li><strong>Reputation levels and loot entries</strong> that members log</li><li><strong>Cooking reminders</strong> until they are sent</li></ul><p>You can delete your profile with <code>/profile clear</code> and fix loot entries with <code>/loot undo</code>. For anything else, contact us on the support server.</p>',
+        ]);
+
+        $this->outputLine('<success>Startinhalte angelegt.</success>');
+    }
+
+    private function categories(NodeAggregateId $parent, bool $full, string $anchor): void
+    {
+        [, $items] = $this->content($parent, 'Categories', [
+            'kicker' => $full ? 'All commands' : 'What’s aboard',
+            'headline' => $full ? 'The full command list' : 'Everything for the voyage',
+            'text' => $full ? '<p>Click a command in Discord to use it, or start with <code>/discover</code> for a guided tour.</p>' : '<p>Six areas, one bot – from your first <code>/discover</code> to guild-wide leaderboards.</p>',
+            'showCommands' => $full,
+            'anchor' => $anchor,
+        ], 'items');
+        foreach (self::CATEGORIES as [$emoji, $title, $text, $accent, $commands]) {
+            $this->content($items, 'Category', [
+                'emoji' => $emoji,
+                'title' => $title,
+                'text' => $text,
+                'accent' => $accent,
+                'commands' => implode("\n", $commands),
+            ]);
+        }
+    }
+
+    private function changelog(NodeAggregateId $parent, int $limit): void
+    {
+        [, $items] = $this->content($parent, 'Changelog', [
+            'kicker' => 'Changelog',
+            'headline' => 'What’s new aboard',
+            'anchor' => 'changelog',
+        ], 'items');
+        foreach (array_slice(self::RELEASES, 0, $limit) as [$version, $date, $lines]) {
+            $this->content($items, 'Release', [
+                'version' => $version,
+                'date' => $date,
+                'text' => '<ul><li>' . implode('</li><li>', $lines) . '</li></ul>',
+            ]);
+        }
+    }
+
+    private function cta(NodeAggregateId $parent): void
+    {
+        $this->content($parent, 'Cta', [
+            'kicker' => 'All hands on deck',
+            'headline' => 'Hoist Salty Pirate on your server',
+            'text' => '<p>Add the bot to your Discord in a few clicks – the invite link and our community server are coming soon.</p>',
+            'anchor' => 'invite',
+        ]);
+    }
+
+    /** @return array{NodeAggregateId, NodeAggregateId} */
+    private function page(NodeAggregateId $parent, string $title, string $segment, string $teaser): array
+    {
+        $id = NodeAggregateId::create();
+        $main = NodeAggregateId::create();
+        $this->cr->handle(
+            CreateNodeAggregateWithNode::create(
+                $this->workspace,
+                $id,
+                NodeTypeName::fromString('SaltyPirate.Site:Document.Page'),
+                $this->origin,
+                $parent,
+                null,
+                PropertyValuesToWrite::fromArray(['title' => $title, 'uriPathSegment' => $segment, 'teaser' => $teaser])
+            )->withTetheredDescendantNodeAggregateIds(NodeAggregateIdsByNodePaths::fromArray(['main' => $main]))
+        );
+        $this->outputLine('Seite: %s', [$title]);
+        return [$id, $main];
+    }
+
+    /** @return array{NodeAggregateId, ?NodeAggregateId} */
+    private function content(NodeAggregateId $parent, string $type, array $props, ?string $tethered = null): array
+    {
+        $id = NodeAggregateId::create();
+        $child = $tethered !== null ? NodeAggregateId::create() : null;
+        $command = CreateNodeAggregateWithNode::create(
+            $this->workspace,
+            $id,
+            NodeTypeName::fromString('SaltyPirate.Site:Content.' . $type),
+            $this->origin,
+            $parent,
+            null,
+            PropertyValuesToWrite::fromArray($props)
+        );
+        if ($tethered !== null) {
+            $command = $command->withTetheredDescendantNodeAggregateIds(NodeAggregateIdsByNodePaths::fromArray([$tethered => $child]));
+        }
+        $this->cr->handle($command);
+        return [$id, $child];
+    }
+}

@@ -1,0 +1,259 @@
+##
+# Gemeinsame Felder
+#
+prototype(SaltyPirate.Site:Content.Base) < prototype(Neos.Neos:ContentComponent) {
+    kicker = Neos.Neos:Editable {
+        property = 'kicker'
+        block = false
+    }
+    headline = Neos.Neos:Editable {
+        property = 'headline'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    anchor = ${q(node).property('anchor') || null}
+
+    @process.convertUris = Neos.Neos:ConvertUris
+}
+
+##
+# Bühne mit Discord-Vorschau
+#
+prototype(SaltyPirate.Site:Content.Hero) < prototype(SaltyPirate.Site:Content.Base) {
+    renderer = afx`
+        <section class="sp-hero" id={props.anchor}>
+            <div class="sp-hero__sky" aria-hidden="true"></div>
+            <SaltyPirate.Site:Component.Compass />
+            <div class="sp-container sp-hero__inner">
+                <div class="sp-hero__copy">
+                    <p class="sp-kicker">{props.kicker}</p>
+                    <h1 class="sp-hero__title">{props.headline}</h1>
+                    <div class="sp-hero__text">{props.text}</div>
+                    <SaltyPirate.Site:Component.BotButtons />
+                </div>
+                <SaltyPirate.Site:Component.DiscordMock />
+            </div>
+            <SaltyPirate.Site:Component.Waves />
+        </section>
+    `
+}
+
+##
+# Kennzahlen
+#
+prototype(SaltyPirate.Site:Content.Stats) < prototype(Neos.Neos:ContentComponent) {
+    v1 = Neos.Neos:Editable {
+        property = 'value1'
+        block = false
+    }
+    l1 = Neos.Neos:Editable {
+        property = 'label1'
+        block = false
+    }
+    v2 = Neos.Neos:Editable {
+        property = 'value2'
+        block = false
+    }
+    l2 = Neos.Neos:Editable {
+        property = 'label2'
+        block = false
+    }
+    v3 = Neos.Neos:Editable {
+        property = 'value3'
+        block = false
+    }
+    l3 = Neos.Neos:Editable {
+        property = 'label3'
+        block = false
+    }
+    v4 = Neos.Neos:Editable {
+        property = 'value4'
+        block = false
+    }
+    l4 = Neos.Neos:Editable {
+        property = 'label4'
+        block = false
+    }
+
+    renderer = afx`
+        <section class="sp-stats">
+            <div class="sp-container sp-stats__grid">
+                <div class="sp-stat"><span class="sp-stat__value">{props.v1}</span><span class="sp-stat__label">{props.l1}</span></div>
+                <div class="sp-stat"><span class="sp-stat__value">{props.v2}</span><span class="sp-stat__label">{props.l2}</span></div>
+                <div class="sp-stat"><span class="sp-stat__value">{props.v3}</span><span class="sp-stat__label">{props.l3}</span></div>
+                <div class="sp-stat"><span class="sp-stat__value">{props.v4}</span><span class="sp-stat__label">{props.l4}</span></div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Befehlsbereiche
+#
+prototype(SaltyPirate.Site:Content.Categories) < prototype(SaltyPirate.Site:Content.Base) {
+    showCommands = ${q(node).property('showCommands')}
+
+    renderer = afx`
+        <section class={'sp-section sp-categories' + (props.showCommands ? ' sp-categories--full' : '')} id={props.anchor}>
+            <div class="sp-container">
+                <SaltyPirate.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['sp-catgrid']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(SaltyPirate.Site:Content.Category) < prototype(Neos.Neos:ContentComponent) {
+    emoji = Neos.Neos:Editable {
+        property = 'emoji'
+        block = false
+    }
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+        block = false
+    }
+    accent = ${q(node).property('accent') || 'gold'}
+    commands = ${String.pregSplit(q(node).property('commands') || '', '/\r?\n/')}
+
+    renderer = afx`
+        <article class={'sp-cat sp-accent--' + props.accent}>
+            <span class="sp-cat__emoji">{props.emoji}</span>
+            <h3 class="sp-cat__title">{props.title}</h3>
+            <p class="sp-cat__text">{props.text}</p>
+            <ul class="sp-cat__cmds">
+                <Neos.Fusion:Loop items={props.commands} itemName="line">
+                    <li @if.has={String.trim(line)}>
+                        <code>{String.trim(String.split(line, '|')[0])}</code>
+                        <span>{String.trim(String.split(line, '|')[1] || '')}</span>
+                    </li>
+                </Neos.Fusion:Loop>
+            </ul>
+        </article>
+    `
+}
+
+##
+# Funktion mit Discord-Vorschau
+#
+prototype(SaltyPirate.Site:Content.Showcase) < prototype(SaltyPirate.Site:Content.Base) {
+    mockLeft = ${q(node).property('mockLeft')}
+
+    renderer = afx`
+        <section class={'sp-section sp-showcase' + (props.mockLeft ? ' sp-showcase--left' : '')} id={props.anchor}>
+            <div class="sp-container sp-showcase__inner">
+                <div class="sp-showcase__copy">
+                    <p class="sp-kicker">{props.kicker}</p>
+                    <h2 class="sp-h2">{props.headline}</h2>
+                    <div class="sp-prose">{props.text}</div>
+                </div>
+                <SaltyPirate.Site:Component.DiscordMock />
+            </div>
+        </section>
+    `
+}
+
+##
+# Berechtigungen
+#
+prototype(SaltyPirate.Site:Content.Permissions) < prototype(SaltyPirate.Site:Content.Base) {
+    items = ${String.pregSplit(q(node).property('items') || '', '/\r?\n/')}
+
+    renderer = afx`
+        <section class="sp-section sp-permissions" id={props.anchor}>
+            <div class="sp-container sp-permissions__inner">
+                <div class="sp-permissions__copy">
+                    <p class="sp-kicker">{props.kicker}</p>
+                    <h2 class="sp-h2">{props.headline}</h2>
+                    <div class="sp-prose">{props.text}</div>
+                </div>
+                <ul class="sp-perms">
+                    <Neos.Fusion:Loop items={props.items} itemName="line">
+                        <li @if.has={String.trim(line)}>
+                            <SaltyPirate.Site:Helper.Icon name="check" />
+                            <strong>{String.trim(String.split(line, '|')[0])}</strong>
+                            <span>{String.trim(String.split(line, '|')[1] || '')}</span>
+                        </li>
+                    </Neos.Fusion:Loop>
+                </ul>
+            </div>
+        </section>
+    `
+}
+
+##
+# Changelog
+#
+prototype(SaltyPirate.Site:Content.Changelog) < prototype(SaltyPirate.Site:Content.Base) {
+    renderer = afx`
+        <section class="sp-section sp-changelog" id={props.anchor}>
+            <div class="sp-container sp-container--narrow">
+                <SaltyPirate.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['sp-releases']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(SaltyPirate.Site:Content.Release) < prototype(Neos.Neos:ContentComponent) {
+    version = Neos.Neos:Editable {
+        property = 'version'
+        block = false
+    }
+    date = Neos.Neos:Editable {
+        property = 'date'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+
+    renderer = afx`
+        <article class="sp-release">
+            <div class="sp-release__head">
+                <span class="sp-release__version">v{props.version}</span>
+                <span class="sp-release__date">{props.date}</span>
+            </div>
+            <div class="sp-release__text">{props.text}</div>
+        </article>
+    `
+}
+
+##
+# Text
+#
+prototype(SaltyPirate.Site:Content.Text) < prototype(SaltyPirate.Site:Content.Base) {
+    renderer = afx`
+        <section class="sp-section sp-text" id={props.anchor}>
+            <div class="sp-container sp-container--narrow">
+                <p class="sp-kicker">{props.kicker}</p>
+                <h2 class="sp-h2">{props.headline}</h2>
+                <div class="sp-prose">{props.text}</div>
+            </div>
+        </section>
+    `
+}
+
+##
+# Aufruf
+#
+prototype(SaltyPirate.Site:Content.Cta) < prototype(SaltyPirate.Site:Content.Base) {
+    renderer = afx`
+        <section class="sp-section sp-cta" id={props.anchor}>
+            <div class="sp-container">
+                <div class="sp-cta__box">
+                    <SaltyPirate.Site:Component.Compass />
+                    <p class="sp-kicker">{props.kicker}</p>
+                    <h2 class="sp-h2">{props.headline}</h2>
+                    <div class="sp-cta__text">{props.text}</div>
+                    <SaltyPirate.Site:Component.BotButtons />
+                </div>
+            </div>
+        </section>
+    `
+}

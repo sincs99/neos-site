@@ -30,7 +30,8 @@
         "neos/demo": "~9.2.0",
         "weltifurrer/site": "@dev",
         "konezciny/site": "@dev",
-        "astronomique/site": "@dev"
+        "astronomique/site": "@dev",
+        "saltypirate/site": "@dev"
     },
     "require-dev": {
         "neos/buildessentials": "~9.2.0",

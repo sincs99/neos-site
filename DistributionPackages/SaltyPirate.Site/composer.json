@@ -1,0 +1,19 @@
+{
+    "name": "saltypirate/site",
+    "type": "neos-site",
+    "description": "Website for the Salty Pirate Discord bot (Neos 9)",
+    "license": "proprietary",
+    "require": {
+        "neos/neos": "~9.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SaltyPirate\\Site\\": "Classes"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "SaltyPirate.Site"
+        }
+    }
+}

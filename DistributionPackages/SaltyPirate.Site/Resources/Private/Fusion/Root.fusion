@@ -1,0 +1,6 @@
+##
+# Salty Pirate - alle Fusion-Dateien dieses Pakets laden
+#
+include: Document/*.fusion
+include: Component/*.fusion
+include: Content/*.fusion

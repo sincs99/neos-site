@@ -1,0 +1,133 @@
+prototype(SaltyPirate.Site:Component.Header) < prototype(Neos.Fusion:Component) {
+    homeUri = Neos.Neos:NodeUri {
+        node = ${site}
+    }
+    menuItems = Neos.Neos:MenuItems {
+        maximumLevels = 1
+    }
+    invite = SaltyPirate.Site:Helper.InviteUrl
+
+    renderer = afx`
+        <header class="sp-header" data-sp-header>
+            <div class="sp-container sp-header__inner">
+                <a class="sp-logo" href={props.homeUri} aria-label="Salty Pirate – home">
+                    <span class="sp-logo__mark" aria-hidden="true">☠</span>
+                    <span class="sp-logo__text">Salty Pirate</span>
+                </a>
+                <button class="sp-burger" type="button" aria-label="Open menu" aria-expanded="false" data-sp-burger>
+                    <span></span><span></span>
+                </button>
+                <nav class="sp-nav" aria-label="Main" data-sp-nav>
+                    <ul class="sp-nav__list">
+                        <Neos.Fusion:Loop items={props.menuItems} itemName="item">
+                            <li class={'sp-nav__item' + ((item.state && (item.state.value == 'current' || item.state.value == 'active')) ? ' is-active' : '')}>
+                                <a class="sp-nav__link" href={item.uri}>{item.label}</a>
+                            </li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                    <a @if.has={props.invite} class="sp-btn sp-btn--discord sp-btn--small" href={props.invite} target="_blank" rel="noopener"><SaltyPirate.Site:Helper.DiscordLogo /> Add to Discord</a>
+                    <span @if.none={!props.invite} class="sp-btn sp-btn--discord sp-btn--small sp-btn--soon"><SaltyPirate.Site:Helper.DiscordLogo /> Add to Discord <small>soon</small></span>
+                </nav>
+            </div>
+        </header>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'sp-header'
+            documentNode = ${Neos.Caching.entryIdentifierForNode(documentNode)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', documentNode)}
+        }
+    }
+}
+
+prototype(SaltyPirate.Site:Component.PageHero) < prototype(Neos.Fusion:Component) {
+    title = Neos.Neos:Editable {
+        node = ${documentNode}
+        property = 'title'
+        block = false
+    }
+    teaser = ${q(documentNode).property('teaser')}
+
+    renderer = afx`
+        <section class="sp-pagehero">
+            <SaltyPirate.Site:Component.Waves />
+            <div class="sp-container sp-pagehero__inner">
+                <p class="sp-kicker">Salty Pirate</p>
+                <h1 class="sp-pagehero__title">{props.title}</h1>
+                <p class="sp-pagehero__teaser" @if.has={props.teaser}>{props.teaser}</p>
+            </div>
+        </section>
+    `
+}
+
+##
+# Wellen-Ornament (SVG)
+#
+prototype(SaltyPirate.Site:Component.Waves) < prototype(Neos.Fusion:Value) {
+    value = '<svg class="sp-waves" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70c120 0 120-40 240-40s120 40 240 40 120-40 240-40 120 40 240 40 120-40 240-40 120 40 240 40v50H0z" fill="currentColor" opacity=".35"/><path d="M0 90c120 0 120-30 240-30s120 30 240 30 120-30 240-30 120 30 240 30 120-30 240-30 120 30 240 30v30H0z" fill="currentColor"/></svg>'
+}
+
+##
+# Kompassrose (SVG, dekorativ)
+#
+prototype(SaltyPirate.Site:Component.Compass) < prototype(Neos.Fusion:Value) {
+    value = '<svg class="sp-compass" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".6"/><circle cx="100" cy="100" r="78" fill="none" stroke="currentColor" stroke-width=".6" stroke-dasharray="2 4" opacity=".6"/><path d="M100 8 112 100 100 192 88 100z" fill="currentColor" opacity=".9"/><path d="M8 100 100 88 192 100 100 112z" fill="currentColor" opacity=".55"/><path d="m35 35 70 60-5 5zM165 165 95 105l5-5zM165 35l-60 70-5-5zM35 165l60-70 5 5z" fill="currentColor" opacity=".35"/><circle cx="100" cy="100" r="7" fill="currentColor"/><text x="100" y="26" text-anchor="middle" font-size="14" fill="currentColor" font-family="Pirata One, serif">N</text></svg>'
+}
+
+prototype(SaltyPirate.Site:Component.Footer) < prototype(Neos.Fusion:Component) {
+    pages = ${q(site).children('[instanceof SaltyPirate.Site:Document.Page]').get()}
+    support = SaltyPirate.Site:Helper.SupportUrl
+    version = ${q(site).property('version')}
+
+    renderer = afx`
+        <footer class="sp-footer">
+            <SaltyPirate.Site:Component.Waves />
+            <div class="sp-footer__body">
+                <div class="sp-container sp-footer__grid">
+                    <div class="sp-footer__brand">
+                        <span class="sp-logo">
+                            <span class="sp-logo__mark" aria-hidden="true">☠</span>
+                            <span class="sp-logo__text">Salty Pirate</span>
+                        </span>
+                        <p>Your crew's first mate on Discord – voyage help, riddles, crews and sessions for Sea of Thieves.</p>
+                        <p class="sp-footer__version" @if.has={props.version}>Current version {props.version}</p>
+                    </div>
+                    <div class="sp-footer__col">
+                        <h4>Pages</h4>
+                        <ul>
+                            <Neos.Fusion:Loop items={props.pages} itemName="p">
+                                <li><Neos.Neos:NodeLink node={p} /></li>
+                            </Neos.Fusion:Loop>
+                        </ul>
+                    </div>
+                    <div class="sp-footer__col">
+                        <h4>Community</h4>
+                        <ul>
+                            <li @if.has={props.support}><a href={props.support} target="_blank" rel="noopener">Support server</a></li>
+                            <li @if.none={!props.support}><span class="sp-muted">Support server – coming soon</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="sp-container sp-footer__legal">
+                    <p>Salty Pirate is an unofficial, fan-made companion bot. It is not affiliated with, endorsed or sponsored by Rare Ltd. or Microsoft. Sea of Thieves is a trademark of Microsoft Corporation.</p>
+                    <p>© 2026 Salty Pirate</p>
+                </div>
+            </div>
+        </footer>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'sp-footer'
+            site = ${Neos.Caching.entryIdentifierForNode(site)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', site)}
+        }
+    }
+}

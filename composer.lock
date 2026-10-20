@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ae214b73128194355bb3a4d4c0127432",
+    "content-hash": "d30c46dd0a392513fe0e28506d957690",
     "packages": [
         {
             "name": "astronomique/site",
@@ -7325,6 +7325,36 @@
             "time": "2025-08-19T18:57:03+00:00"
         },
         {
+            "name": "saltypirate/site",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./DistributionPackages/SaltyPirate.Site",
+                "reference": "3e7869d9e02cadb8b2b100a0eb0f83541e709a27"
+            },
+            "require": {
+                "neos/neos": "~9.2.0"
+            },
+            "type": "neos-site",
+            "extra": {
+                "neos": {
+                    "package-key": "SaltyPirate.Site"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SaltyPirate\\Site\\": "Classes"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Website for the Salty Pirate Discord bot (Neos 9)",
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "seld/jsonlint",
             "version": "1.12.1",
             "source": {
@@ -12627,6 +12657,7 @@
     "stability-flags": {
         "astronomique/site": 20,
         "konezciny/site": 20,
+        "saltypirate/site": 20,
         "weltifurrer/site": 20
     },
     "prefer-stable": false,

@@ -1,0 +1,36 @@
+prototype(SaltyPirate.Site:Document.Page) < prototype(Neos.Fusion:Component) {
+    isHome = false
+
+    renderer = Neos.Neos:Page {
+        htmlTag.attributes.lang = 'en'
+        head {
+            metaViewport = '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            themeColor = '<meta name="theme-color" content="#081a22">'
+            robots = '<meta name="robots" content="noindex, nofollow">'
+            description = Neos.Fusion:Tag {
+                tagName = 'meta'
+                attributes.name = 'description'
+                attributes.content = ${q(documentNode).property('teaser') || 'Salty Pirate – an unofficial Sea of Thieves companion bot for Discord: riddles, islands, crews, LFG, sessions and more.'}
+            }
+            fonts = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">'
+            stylesheets.site = afx`<link rel="stylesheet" href={StaticResource.uri('SaltyPirate.Site', 'Public/Styles/main.css')} />`
+            javascripts.site = afx`<script src={StaticResource.uri('SaltyPirate.Site', 'Public/Scripts/main.js')} defer></script>`
+        }
+
+        bodyTag.attributes.class = ${props.isHome ? 'sp sp--home' : 'sp sp--sub'}
+
+        body = afx`
+            <a class="sp-skip" href="#main">Skip to content</a>
+            <SaltyPirate.Site:Component.Header />
+            <main id="main" class="sp-main">
+                <SaltyPirate.Site:Component.PageHero @if.sub={!props.isHome} />
+                <Neos.Neos:ContentCollection nodePath="main" attributes.class={['sp-content']} />
+            </main>
+            <SaltyPirate.Site:Component.Footer />
+        `
+    }
+}
+
+prototype(SaltyPirate.Site:Document.HomePage) < prototype(SaltyPirate.Site:Document.Page) {
+    isHome = true
+}

@@ -1,0 +1,18 @@
+Neos:
+  Neos:
+    sites:
+      # Site-Knoten "saltypirate": Englisch ist Standard ("/" zeigt Englisch, wie der Bot)
+      'saltypirate':
+        preset: default
+        contentDimensions:
+          defaultDimensionSpacePoint:
+            language: en_US
+          resolver:
+            factoryClassName: Neos\Neos\FrontendRouting\DimensionResolution\Resolver\UriPathResolverFactory
+            options:
+              segments:
+                - dimensionIdentifier: language
+                  dimensionValueMapping:
+                    en_US: en
+                    en_GB: uk
+                    de: de
