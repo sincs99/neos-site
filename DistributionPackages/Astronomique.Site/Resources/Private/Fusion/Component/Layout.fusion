@@ -1,0 +1,191 @@
+prototype(Astronomique.Site:Component.Header) < prototype(Neos.Fusion:Component) {
+    homeUri = Neos.Neos:NodeUri {
+        node = ${site}
+    }
+    menuItems = Neos.Neos:MenuItems {
+        maximumLevels = 2
+    }
+
+    renderer = afx`
+        <header class="as-header" data-as-header>
+            <div class="as-container as-header__inner">
+                <a class="as-logo" href={props.homeUri} aria-label="Astronomique – Startseite">
+                    <img src="https://astronomique.ch/wp-content/uploads/2023/12/Logo_pencil_white.png" alt="Astronomique" height="44" />
+                </a>
+                <button class="as-burger" type="button" aria-label="Menü öffnen" aria-expanded="false" data-as-burger>
+                    <span></span><span></span>
+                </button>
+                <nav class="as-nav" aria-label="Hauptnavigation" data-as-nav>
+                    <ul class="as-nav__list">
+                        <Neos.Fusion:Loop items={props.menuItems} itemName="item">
+                            <li class={'as-nav__item' + ((item.state && (item.state.value == 'current' || item.state.value == 'active')) ? ' is-active' : '') + ((Type.isArray(item.subItems) && Array.length(item.subItems) > 0) ? ' has-sub' : '')}>
+                                <a class="as-nav__link" href={item.uri}>{item.label}</a>
+                                <ul class="as-nav__sub" @if.has={Type.isArray(item.subItems) && Array.length(item.subItems) > 0}>
+                                    <Neos.Fusion:Loop items={item.subItems} itemName="sub">
+                                        <li><a href={sub.uri}>{sub.label}</a></li>
+                                    </Neos.Fusion:Loop>
+                                </ul>
+                            </li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                    <span class="as-nav__social">
+                        <a href="https://www.instagram.com/" aria-label="Instagram" target="_blank" rel="noopener"><Astronomique.Site:Helper.Icon name="instagram" /></a>
+                        <a href="https://www.facebook.com/balinightsgin/" aria-label="Facebook" target="_blank" rel="noopener"><Astronomique.Site:Helper.Icon name="facebook" /></a>
+                    </span>
+                    <a class="as-btn as-btn--gold as-nav__cta" href="https://astronomique.ch/?page_id=7">
+                        <Astronomique.Site:Helper.Icon name="bag" /> Shop
+                    </a>
+                </nav>
+            </div>
+        </header>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'as-header'
+            documentNode = ${Neos.Caching.entryIdentifierForNode(documentNode)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', documentNode)}
+        }
+    }
+}
+
+##
+# Seitenkopf normaler Unterseiten
+#
+prototype(Astronomique.Site:Component.PageHero) < prototype(Neos.Fusion:Component) {
+    title = Neos.Neos:Editable {
+        node = ${documentNode}
+        property = 'title'
+        block = false
+    }
+    teaser = ${q(documentNode).property('teaser')}
+
+    renderer = afx`
+        <section class="as-pagehero">
+            <canvas class="as-stars" data-as-stars aria-hidden="true"></canvas>
+            <div class="as-container as-pagehero__inner">
+                <p class="as-kicker">Astronomique</p>
+                <h1 class="as-pagehero__title">{props.title}</h1>
+                <p class="as-pagehero__teaser" @if.has={props.teaser}>{props.teaser}</p>
+            </div>
+        </section>
+    `
+}
+
+##
+# Kopf einer Produktseite: Bild, Preis, Eckdaten, Bestellen
+#
+prototype(Astronomique.Site:Component.ProductHero) < prototype(Neos.Fusion:Component) {
+    title = Neos.Neos:Editable {
+        node = ${documentNode}
+        property = 'title'
+        block = false
+    }
+    subtitle = ${q(documentNode).property('subtitle')}
+    teaser = ${q(documentNode).property('teaser')}
+    price = ${q(documentNode).property('price')}
+    availability = ${q(documentNode).property('availability') || 'instock'}
+    shopUrl = ${q(documentNode).property('shopUrl')}
+    tone = ${q(documentNode).property('tone') || 'tropical'}
+    facts = ${String.pregSplit(q(documentNode).property('facts') || '', '/\r?\n/')}
+    imageSrc = Astronomique.Site:Helper.ImageSrc {
+        node = ${documentNode}
+        width = 1400
+    }
+    parentUri = Neos.Neos:NodeUri {
+        node = ${q(documentNode).parent().get(0)}
+    }
+
+    renderer = afx`
+        <section class={'as-producthero as-tone--' + props.tone}>
+            <canvas class="as-stars" data-as-stars aria-hidden="true"></canvas>
+            <div class="as-container as-producthero__inner">
+                <div class="as-producthero__stage">
+                    <span class="as-product__halo" aria-hidden="true"></span>
+                    <img @if.has={props.imageSrc} src={props.imageSrc} alt={q(documentNode).property('title')} />
+                </div>
+                <div class="as-producthero__info">
+                    <a class="as-backlink" href={props.parentUri}>← Alle Produkte</a>
+                    <span class={'as-badge as-badge--' + props.availability}><Astronomique.Site:Helper.Availability value={props.availability} /></span>
+                    <h1 class="as-producthero__title">{props.title}</h1>
+                    <p class="as-producthero__subtitle" @if.has={props.subtitle}>{props.subtitle}</p>
+                    <p class="as-producthero__teaser" @if.has={props.teaser}>{props.teaser}</p>
+                    <dl class="as-facts">
+                        <Neos.Fusion:Loop items={props.facts} itemName="line">
+                            <Neos.Fusion:Fragment @if.has={String.pregMatch(line, '/^\s*([^:]+):\s*(.+)$/')}>
+                                <div class="as-facts__row">
+                                    <dt>{String.trim(String.pregMatch(line, '/^\s*([^:]+):\s*(.+)$/')[1])}</dt>
+                                    <dd>{String.trim(String.pregMatch(line, '/^\s*([^:]+):\s*(.+)$/')[2])}</dd>
+                                </div>
+                            </Neos.Fusion:Fragment>
+                        </Neos.Fusion:Loop>
+                    </dl>
+                    <div class="as-producthero__buy">
+                        <span class="as-price">{props.price}</span>
+                        <a @if.can={props.shopUrl && props.availability == 'instock'} class="as-btn as-btn--gold" href={props.shopUrl}>
+                            <Astronomique.Site:Helper.Icon name="bag" /> Jetzt bestellen
+                        </a>
+                        <span @if.cannot={props.availability != 'instock'} class="as-btn as-btn--disabled"><Astronomique.Site:Helper.Availability value={props.availability} /></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    `
+}
+
+prototype(Astronomique.Site:Component.Footer) < prototype(Neos.Fusion:Component) {
+    pages = ${q(site).children('[instanceof Astronomique.Site:Document.Page]').get()}
+    products = ${q(site).find('[instanceof Astronomique.Site:Document.Product]').get()}
+
+    renderer = afx`
+        <footer class="as-footer">
+            <div class="as-container as-footer__grid">
+                <div class="as-footer__brand">
+                    <img src="https://astronomique.ch/wp-content/uploads/2023/12/Logo_pencil_white.png" alt="Astronomique" height="40" loading="lazy" />
+                    <p>Astronomique Liquor Company – inspiriert vom Sternenhimmel, abgefüllt mit Schweizer Quellwasser.</p>
+                    <span class="as-footer__social">
+                        <a href="https://www.instagram.com/" aria-label="Instagram" target="_blank" rel="noopener"><Astronomique.Site:Helper.Icon name="instagram" /></a>
+                        <a href="https://www.facebook.com/balinightsgin/" aria-label="Facebook" target="_blank" rel="noopener"><Astronomique.Site:Helper.Icon name="facebook" /></a>
+                    </span>
+                </div>
+                <div class="as-footer__col">
+                    <h4>Produkte</h4>
+                    <ul>
+                        <Neos.Fusion:Loop items={props.products} itemName="p">
+                            <li><Neos.Neos:NodeLink node={p} /></li>
+                        </Neos.Fusion:Loop>
+                    </ul>
+                </div>
+                <div class="as-footer__col">
+                    <h4>Astronomique</h4>
+                    <ul>
+                        <Neos.Fusion:Loop items={props.pages} itemName="p">
+                            <li><Neos.Neos:NodeLink node={p} /></li>
+                        </Neos.Fusion:Loop>
+                        <li><a href="https://astronomique.ch/?page_id=7">Shop</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="as-footer__legal">
+                <div class="as-container as-footer__legal-inner">
+                    <span>© 2026 Astronomique Liquor Company</span>
+                    <span class="as-footer__age">Genuss mit Verantwortung · Spirituosen nur ab 18 Jahren</span>
+                </div>
+            </div>
+        </footer>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier {
+            static = 'as-footer'
+            site = ${Neos.Caching.entryIdentifierForNode(site)}
+        }
+        entryTags {
+            1 = ${Neos.Caching.nodeTypeTag('Neos.Neos:Document', site)}
+        }
+    }
+}

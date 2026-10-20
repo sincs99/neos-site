@@ -1,0 +1,254 @@
+'Astronomique.Site:Content':
+  abstract: true
+  superTypes:
+    'Neos.Neos:Content': true
+
+'Astronomique.Site:Mixin.Head':
+  abstract: true
+  properties:
+    kicker:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Dachzeile'
+    headline:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Text'
+            formatting:
+              strong: true
+              em: true
+              a: true
+              ul: true
+              p: true
+    anchor:
+      type: string
+      ui:
+        label: 'Sprungmarke (ohne #)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+
+'Astronomique.Site:Mixin.Buttons':
+  abstract: true
+  ui:
+    inspector:
+      groups:
+        buttons:
+          label: 'Buttons'
+          icon: 'hand-pointer'
+          position: 30
+  properties:
+    primaryLabel:
+      type: string
+      ui:
+        label: 'Button 1 Text'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+    primaryLink:
+      type: string
+      ui:
+        label: 'Button 1 Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+    secondaryLabel:
+      type: string
+      ui:
+        label: 'Button 2 Text'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+    secondaryLink:
+      type: string
+      ui:
+        label: 'Button 2 Ziel'
+        reloadIfChanged: true
+        inspector:
+          group: buttons
+          editor: 'Neos.Neos/Inspector/Editors/LinkEditor'
+
+'Astronomique.Site:Mixin.Image':
+  abstract: true
+  ui:
+    inspector:
+      groups:
+        image:
+          label: 'Bild'
+          icon: 'image'
+          position: 20
+  properties:
+    image:
+      type: Neos\Media\Domain\Model\ImageInterface
+      ui:
+        label: 'Bild'
+        reloadIfChanged: true
+        inspector:
+          group: image
+    imageUrl:
+      type: string
+      ui:
+        label: 'Bild als URL (nur Entwurf)'
+        reloadIfChanged: true
+        inspector:
+          group: image
+
+# Bühne mit Sternenhimmel und Produktbild
+'Astronomique.Site:Content.Hero':
+  superTypes:
+    'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Head': true
+    'Astronomique.Site:Mixin.Buttons': true
+    'Astronomique.Site:Mixin.Image': true
+  ui:
+    label: 'Bühne (Sternenhimmel)'
+    icon: 'star'
+
+# Zitat / Geschichte als grosser Satz
+'Astronomique.Site:Content.Quote':
+  superTypes:
+    'Astronomique.Site:Content': true
+  ui:
+    label: 'Zitat'
+    icon: 'quote-left'
+  properties:
+    quote:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Zitat'
+            formatting:
+              em: true
+    source:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Quelle'
+
+# Produktliste: zeigt alle Produktseiten automatisch
+'Astronomique.Site:Content.ProductList':
+  superTypes:
+    'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Head': true
+  ui:
+    label: 'Produkte (automatisch)'
+    icon: 'wine-bottle'
+
+'Astronomique.Site:Content.TextImage':
+  superTypes:
+    'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Head': true
+    'Astronomique.Site:Mixin.Buttons': true
+    'Astronomique.Site:Mixin.Image': true
+  ui:
+    label: 'Text mit Bild'
+    icon: 'columns'
+  properties:
+    imageRight:
+      type: boolean
+      ui:
+        label: 'Bild rechts'
+        reloadIfChanged: true
+        inspector:
+          group: image
+
+'Astronomique.Site:Content.Features':
+  superTypes:
+    'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Head': true
+  ui:
+    label: 'Merkmale'
+    icon: 'list'
+  childNodes:
+    items:
+      type: 'Astronomique.Site:Collection.Features'
+
+'Astronomique.Site:Collection.Features':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'Astronomique.Site:Content.Feature': true
+
+'Astronomique.Site:Content.Feature':
+  superTypes:
+    'Astronomique.Site:Content': true
+  ui:
+    label: 'Merkmal'
+    icon: 'star'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Titel'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Text'
+    icon:
+      type: string
+      defaultValue: 'star'
+      ui:
+        label: 'Symbol'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              star: { label: 'Stern' }
+              moon: { label: 'Mond' }
+              leaf: { label: 'Blatt / Botanicals' }
+              fruit: { label: 'Frucht' }
+              drop: { label: 'Tropfen / Wasser' }
+              wave: { label: 'Welle / Meer' }
+              sun: { label: 'Sonne' }
+              glass: { label: 'Glas' }
+              mountain: { label: 'Berg / Schweiz' }
+
+'Astronomique.Site:Content.Text':
+  superTypes:
+    'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Head': true
+  ui:
+    label: 'Text'
+    icon: 'align-left'
+
+'Astronomique.Site:Content.Cta':
+  superTypes:
+    'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Head': true
+    'Astronomique.Site:Mixin.Buttons': true
+  ui:
+    label: 'Aufruf'
+    icon: 'bullhorn'

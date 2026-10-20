@@ -1,0 +1,19 @@
+{
+    "name": "astronomique/site",
+    "type": "neos-site",
+    "description": "Website astronomique.ch – Astronomique Liquor Company (Neos 9)",
+    "license": "proprietary",
+    "require": {
+        "neos/neos": "~9.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Astronomique\\Site\\": "Classes"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Astronomique.Site"
+        }
+    }
+}

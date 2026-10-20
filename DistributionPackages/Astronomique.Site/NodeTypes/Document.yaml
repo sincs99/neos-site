@@ -1,0 +1,146 @@
+'Astronomique.Site:Document.Page':
+  superTypes:
+    'Neos.Neos:Document': true
+  ui:
+    label: 'Seite'
+    icon: 'file'
+    position: 10
+    inspector:
+      groups:
+        pagehero:
+          label: 'Seitenkopf'
+          icon: 'heading'
+          tab: default
+          position: 20
+  constraints:
+    nodeTypes:
+      '*': false
+      'Astronomique.Site:Document.Page': true
+      'Astronomique.Site:Document.Product': true
+      'Astronomique.Site:Document.HomePage': false
+  childNodes:
+    main:
+      type: 'Astronomique.Site:Collection.Main'
+  properties:
+    teaser:
+      type: string
+      ui:
+        label: 'Kurzbeschreibung'
+        reloadIfChanged: true
+        inspector:
+          group: pagehero
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+
+'Astronomique.Site:Document.HomePage':
+  superTypes:
+    'Neos.Neos:Site': true
+    'Astronomique.Site:Document.Page': true
+  ui:
+    label: 'Startseite'
+    icon: 'globe'
+
+# Produkt: Seitenkopf mit Bild, Preis, Eckdaten und Bestell-Button
+'Astronomique.Site:Document.Product':
+  superTypes:
+    'Astronomique.Site:Document.Page': true
+  ui:
+    label: 'Produkt'
+    icon: 'wine-bottle'
+    position: 20
+    inspector:
+      groups:
+        product:
+          label: 'Produkt'
+          icon: 'wine-bottle'
+          tab: default
+          position: 10
+  constraints:
+    nodeTypes:
+      '*': false
+  properties:
+    subtitle:
+      type: string
+      ui:
+        label: 'Untertitel'
+        reloadIfChanged: true
+        inspector:
+          group: product
+    price:
+      type: string
+      ui:
+        label: 'Preis (z. B. CHF 45.00)'
+        reloadIfChanged: true
+        inspector:
+          group: product
+    facts:
+      type: string
+      ui:
+        label: 'Eckdaten (eine pro Zeile, „Bezeichnung: Wert“)'
+        reloadIfChanged: true
+        inspector:
+          group: product
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+    availability:
+      type: string
+      defaultValue: 'instock'
+      ui:
+        label: 'Verfügbarkeit'
+        reloadIfChanged: true
+        inspector:
+          group: product
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              instock:
+                label: 'Erhältlich'
+              soldout:
+                label: 'Ausverkauft'
+              soon:
+                label: 'Bald erhältlich'
+    shopUrl:
+      type: string
+      ui:
+        label: 'Bestell-Link'
+        reloadIfChanged: true
+        inspector:
+          group: product
+    image:
+      type: Neos\Media\Domain\Model\ImageInterface
+      ui:
+        label: 'Produktbild'
+        reloadIfChanged: true
+        inspector:
+          group: product
+    imageUrl:
+      type: string
+      ui:
+        label: 'Produktbild als URL (nur Entwurf)'
+        reloadIfChanged: true
+        inspector:
+          group: product
+    tone:
+      type: string
+      defaultValue: 'tropical'
+      ui:
+        label: 'Farbstimmung'
+        reloadIfChanged: true
+        inspector:
+          group: product
+          editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            values:
+              tropical:
+                label: 'Tropisch (Türkis)'
+              gold:
+                label: 'Gold'
+              sea:
+                label: 'Meer (Blau)'
+
+'Astronomique.Site:Collection.Main':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'Astronomique.Site:Content': true
+      'Astronomique.Site:Content.Feature': false

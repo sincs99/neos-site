@@ -4,8 +4,38 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4157f1ee4bfb81b35e0e22346d82483c",
+    "content-hash": "ae214b73128194355bb3a4d4c0127432",
     "packages": [
+        {
+            "name": "astronomique/site",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./DistributionPackages/Astronomique.Site",
+                "reference": "250a1a89c81185dae481b55894974f6ffc569093"
+            },
+            "require": {
+                "neos/neos": "~9.2.0"
+            },
+            "type": "neos-site",
+            "extra": {
+                "neos": {
+                    "package-key": "Astronomique.Site"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Astronomique\\Site\\": "Classes"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Website astronomique.ch – Astronomique Liquor Company (Neos 9)",
+            "transport-options": {
+                "relative": true
+            }
+        },
         {
             "name": "behat/transliterator",
             "version": "v1.5.0",
@@ -12595,6 +12625,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "astronomique/site": 20,
         "konezciny/site": 20,
         "weltifurrer/site": 20
     },

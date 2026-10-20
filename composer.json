@@ -29,7 +29,8 @@
         "neos/seo": "~4.1",
         "neos/demo": "~9.2.0",
         "weltifurrer/site": "@dev",
-        "konezciny/site": "@dev"
+        "konezciny/site": "@dev",
+        "astronomique/site": "@dev"
     },
     "require-dev": {
         "neos/buildessentials": "~9.2.0",
