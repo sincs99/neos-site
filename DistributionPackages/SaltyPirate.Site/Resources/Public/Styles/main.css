@@ -332,3 +332,45 @@ code { font-family: var(--sp-mono); }
 /* Buy Me a Coffee (Markenfarbe Gelb) */
 .sp-btn--coffee { color: #1b1b1b; background: #ffdd00; box-shadow: 0 10px 30px -12px rgba(255, 221, 0, .6); }
 .sp-btn--coffee:hover { background: #ffe94d; }
+
+/* Einrichtungs-Schritte */
+.sp-steplist { counter-reset: sp-step; display: grid; gap: 22px; margin: 0; padding: 0; list-style: none; }
+.sp-step {
+    counter-increment: sp-step;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+    align-items: start;
+    padding: 30px 32px 30px 104px;
+    background: var(--sp-sea-2);
+    border: 1px solid var(--sp-line);
+    border-radius: var(--sp-radius);
+}
+.sp-step--mock { grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); }
+.sp-step::before {
+    content: counter(sp-step);
+    position: absolute;
+    left: 30px;
+    top: 28px;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    font: 400 30px/1 var(--sp-display);
+    color: var(--sp-deep);
+    background: linear-gradient(140deg, var(--sp-gold-2), var(--sp-gold));
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(233, 180, 76, .18);
+}
+.sp-step__title { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 10px 0 10px; font: 400 32px/1.05 var(--sp-display); color: var(--sp-foam); }
+.sp-step__badge { padding: 4px 9px; font: 700 11px/1 var(--sp-font); letter-spacing: .1em; text-transform: uppercase; color: var(--sp-teal); border: 1px solid rgba(46, 196, 182, .4); border-radius: 6px; }
+.sp-step__text { font-size: 16px; }
+.sp-step .sp-discord { font-size: 14px; }
+@media (max-width: 1000px) {
+    .sp-step, .sp-step--mock { grid-template-columns: 1fr; gap: 24px; }
+}
+@media (max-width: 640px) {
+    .sp-step { padding: 76px 20px 24px; }
+    .sp-step::before { left: 20px; top: 18px; width: 44px; height: 44px; font-size: 26px; }
+}

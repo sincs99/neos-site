@@ -84,3 +84,4 @@
       'SaltyPirate.Site:Content': true
       'SaltyPirate.Site:Content.Category': false
       'SaltyPirate.Site:Content.Release': false
+      'SaltyPirate.Site:Content.Step': false

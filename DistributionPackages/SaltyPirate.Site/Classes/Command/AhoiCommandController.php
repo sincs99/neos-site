@@ -165,6 +165,125 @@ class AhoiCommandController extends CommandController
         });
     }
 
+    /**
+     * Seite "Setup" (Einrichtungs-Anleitung für Server-Admins) anlegen, vor "Changelog"
+     *
+     * Inhalte nach main.py (/settings), crews.py und commands/invite.py.
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function setupCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
+            $this->cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+            $this->workspace = WorkspaceName::forLive();
+            $this->origin = OriginDimensionSpacePoint::fromArray(['language' => $language]);
+            $graph = $this->cr->getContentGraph($this->workspace);
+            $sites = $graph->findRootNodeAggregateByType(NodeTypeNameFactory::forSites());
+            $siteAggregate = $sites ? $graph->findChildNodeAggregateByName($sites->nodeAggregateId, NodeName::fromString($site)) : null;
+            if ($siteAggregate === null) {
+                $this->outputLine('<error>Site "%s" nicht gefunden.</error>', [$site]);
+                $this->quit(1);
+            }
+            $before = null;
+            foreach ($graph->findChildNodeAggregates($siteAggregate->nodeAggregateId) as $child) {
+                if (!$child->occupiesDimensionSpacePoint($this->origin)) {
+                    continue;
+                }
+                $segment = $child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('uriPathSegment');
+                if ($segment === 'setup') {
+                    $this->outputLine('<comment>Seite "Setup" gibt es schon - nichts angelegt.</comment>');
+                    return;
+                }
+                if ($segment === 'changelog') {
+                    $before = $child->nodeAggregateId;
+                }
+            }
+
+            $id = NodeAggregateId::create();
+            $main = NodeAggregateId::create();
+            $this->cr->handle(CreateNodeAggregateWithNode::create(
+                $this->workspace,
+                $id,
+                NodeTypeName::fromString('SaltyPirate.Site:Document.Page'),
+                $this->origin,
+                $siteAggregate->nodeAggregateId,
+                $before,
+                PropertyValuesToWrite::fromArray([
+                    'title' => 'Setup',
+                    'uriPathSegment' => 'setup',
+                    'teaser' => 'From invite to your first crew card – set up Salty Pirate on your server in a few minutes.',
+                ])
+            )->withTetheredDescendantNodeAggregateIds(NodeAggregateIdsByNodePaths::fromArray(['main' => $main])));
+
+            [, $steps] = $this->content($main, 'Steps', [
+                'kicker' => 'Setup guide',
+                'headline' => 'Ready to sail in a few steps',
+                'text' => '<p>The first three steps are all you need. Everything after that is optional – turn on what your crew will use.</p>',
+            ], 'items');
+
+            $this->content($steps, 'Step', [
+                'title' => 'Invite Salty Pirate',
+                'text' => '<p>Click <strong>Add to Discord</strong>, pick your server and keep the suggested permissions – they are exactly what the features need. You need the <strong>Manage Server</strong> permission on that server.</p><p>Already have the bot on another server? <code>/invite</code> gives you the same link.</p>',
+                'mockCommand' => '/invite',
+                'mockTitle' => '🏴‍☠️ Bring Salty Pirate aboard',
+                'mockBody' => "Add Salty Pirate to your server\nJoin the support server – questions, bugs, ideas",
+                'mockButtons' => 'Add to your server, Support server',
+                'mockColor' => 'blurple',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Check that it’s aboard',
+                'text' => '<p>Type <code>/ping</code> – if the bot answers, you’re good. <code>/about</code> shows bot and setup info. If the slash commands don’t show up right away, wait a moment and reopen Discord.</p>',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Set your server’s timezone',
+                'text' => '<p>When members type times into <code>/session plan</code> (like <code>fri 21:00</code>), the bot reads them in your server’s timezone. Set it once:</p><p><code>/settings timezone:Europe/Berlin</code></p><p>Run <code>/settings</code> without options any time to see all current settings.</p>',
+                'mockCommand' => '/settings',
+                'mockTitle' => '⚙️ Salty Pirate Settings',
+                'mockBody' => "News channel: Not set\nCooking reminders: Enabled\nTimezone for /session: Europe/Berlin\nCrew voice channels: Off\nSessions as server events: Off\nWeekly reputation summary: Off",
+                'mockButtons' => '',
+                'mockColor' => 'teal',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Sea of Thieves news',
+                'badge' => 'Optional',
+                'text' => '<p>Pick a channel for the official Sea of Thieves announcements – the bot checks every 30 minutes and posts new ones there:</p><p><code>/settings news_channel:#sot-news</code></p><p>The bot needs <strong>Send Messages</strong> in that channel. Stop it with <code>/settings disable_news:True</code>. <code>/news</code> shows the latest three on demand.</p>',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Weekly reputation summary',
+                'badge' => 'Optional',
+                'text' => '<p>Members log their faction levels with <code>/rep set</code>. Pick a channel and the bot posts who levelled up every Monday at 09:00 in your server’s timezone:</p><p><code>/settings rep_channel:#reputation</code></p><p>Turn it off with <code>/settings disable_rep_summary:True</code>.</p>',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Voice channels for full crews',
+                'badge' => 'Optional',
+                'text' => '<p>When an <code>/lfg</code> crew fills up, the bot can open a temporary voice channel for it – limited to the crew size and removed once everyone has left (or after 10 minutes if nobody joins).</p><p><code>/settings lfg_voice:True lfg_voice_category:Crews</code></p><p>Needs <strong>Manage Channels</strong> (part of the invite). Without a category, the channel goes next to the LFG post.</p>',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Sessions under Events',
+                'badge' => 'Optional',
+                'text' => '<p>Every <code>/session plan</code> can also be listed under your server’s <strong>Events</strong>. Clicking <em>Interested</em> there counts as Going on the card.</p><p><code>/settings session_events:True</code></p><p>Needs <strong>Manage Events</strong> (part of the invite).</p>',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Crews with their own role',
+                'badge' => 'Optional',
+                'text' => '<p>With <code>/crew create</code> every crew gets a mentionable Discord role. For that the bot needs one extra permission that is <strong>not</strong> part of the invite:</p><ul><li>Give the bot’s role <strong>Manage Roles</strong> in <em>Server Settings → Roles</em>.</li><li>Drag the bot’s role <strong>above</strong> the crew roles – Discord only lets it manage roles below its own.</li></ul><p>Then pick captains with <code>/crew captain</code>. Without the permission, crews still work – just without a role.</p>',
+            ]);
+            $this->content($steps, 'Step', [
+                'title' => 'Show your crew around',
+                'text' => '<p>Tell your members about <code>/discover</code> – a guided tour of all features – and <code>/help</code> for the full list. A good first step for everyone: <code>/profile set</code> with gamertag, platform and favourite roles on board.</p>',
+                'mockCommand' => '/discover',
+                'mockTitle' => '🏴‍☠️ Discover Salty Pirate',
+                'mockBody' => "Choose a category below to quickly learn which commands to use.",
+                'mockButtons' => 'Start here, Navigation, Survival, Voyage, Guild, Community',
+                'mockColor' => 'blurple',
+            ]);
+            $this->cta($main);
+            $this->outputLine('<success>Seite "Setup" angelegt.</success>');
+        });
+    }
+
     private function seed(string $siteName, string $language): void
     {
         $this->cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));

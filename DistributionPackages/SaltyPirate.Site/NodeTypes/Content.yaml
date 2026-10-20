@@ -336,3 +336,61 @@
   ui:
     label: 'Aufruf (Einladen / Community)'
     icon: 'bullhorn'
+
+# Einrichtungs-Schritte (nummeriert, optional mit Discord-Vorschau)
+'SaltyPirate.Site:Content.Steps':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Schritte (Anleitung)'
+    icon: 'list-ol'
+  childNodes:
+    items:
+      type: 'SaltyPirate.Site:Collection.Steps'
+
+'SaltyPirate.Site:Collection.Steps':
+  superTypes:
+    'Neos.Neos:ContentCollection': true
+  constraints:
+    nodeTypes:
+      '*': false
+      'SaltyPirate.Site:Content.Step': true
+
+'SaltyPirate.Site:Content.Step':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Mock': true
+  ui:
+    label: 'Schritt'
+    icon: 'shoe-prints'
+  properties:
+    title:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Schritt'
+    badge:
+      type: string
+      ui:
+        label: 'Hinweis-Etikett (z. B. optional)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
+    text:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            placeholder: 'Beschreibung'
+            formatting:
+              strong: true
+              em: true
+              a: true
+              ul: true
+              p: true
+              code: true

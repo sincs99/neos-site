@@ -257,3 +257,40 @@ prototype(SaltyPirate.Site:Content.Cta) < prototype(SaltyPirate.Site:Content.Bas
         </section>
     `
 }
+
+##
+# Einrichtungs-Schritte
+#
+prototype(SaltyPirate.Site:Content.Steps) < prototype(SaltyPirate.Site:Content.Base) {
+    renderer = afx`
+        <section class="sp-section sp-steps" id={props.anchor}>
+            <div class="sp-container">
+                <SaltyPirate.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
+                <Neos.Neos:ContentCollection nodePath="items" tagName="ol" attributes.class={['sp-steplist']} />
+            </div>
+        </section>
+    `
+}
+
+prototype(SaltyPirate.Site:Content.Step) < prototype(Neos.Neos:ContentComponent) {
+    title = Neos.Neos:Editable {
+        property = 'title'
+        block = false
+    }
+    text = Neos.Neos:Editable {
+        property = 'text'
+    }
+    badge = ${q(node).property('badge')}
+    hasMock = ${q(node).property('mockTitle') ? true : false}
+
+    renderer = afx`
+        <li class={'sp-step' + (props.hasMock ? ' sp-step--mock' : '')}>
+            <div class="sp-step__copy">
+                <h3 class="sp-step__title">{props.title}<span class="sp-step__badge" @if.has={props.badge}>{props.badge}</span></h3>
+                <div class="sp-prose sp-step__text">{props.text}</div>
+            </div>
+            <SaltyPirate.Site:Component.DiscordMock @if.mock={props.hasMock} />
+        </li>
+    `
+    @process.convertUris = Neos.Neos:ConvertUris
+}
