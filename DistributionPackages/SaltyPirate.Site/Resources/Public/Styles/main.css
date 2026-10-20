@@ -330,3 +330,7 @@ code { font-family: var(--sp-mono); }
     *, *::before, *::after { transition: none !important; }
     html { scroll-behavior: auto; }
 }
+
+/* Buy Me a Coffee (Markenfarbe Gelb) */
+.sp-btn--coffee { color: #1b1b1b; background: #ffdd00; box-shadow: 0 10px 30px -12px rgba(255, 221, 0, .6); }
+.sp-btn--coffee:hover { background: #ffe94d; }

@@ -118,6 +118,53 @@ class AhoiCommandController extends CommandController
         });
     }
 
+    /**
+     * Bot-Links der Startseite setzen (nur angegebene Werte werden geändert, "" leert einen Link)
+     *
+     * @param string|null $invite Einladungslink (Add to Discord)
+     * @param string|null $support Community-/Support-Server
+     * @param string|null $donate Unterstützen-Link (Buy Me a Coffee)
+     * @param string|null $version Aktuelle Bot-Version
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function linksCommand(?string $invite = null, ?string $support = null, ?string $donate = null, ?string $version = null, string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $values = array_filter(
+            ['inviteUrl' => $invite, 'supportUrl' => $support, 'donateUrl' => $donate, 'version' => $version],
+            fn ($v) => $v !== null
+        );
+        foreach ($values as $key => $value) {
+            if ($value !== '' && $key !== 'version' && !preg_match('#^https://#', $value)) {
+                $this->outputLine('<error>%s muss mit https:// beginnen.</error>', [$key]);
+                $this->quit(1);
+            }
+        }
+        if ($values === []) {
+            $this->outputLine('Nichts angegeben (--invite, --support, --donate, --version).');
+            return;
+        }
+        $this->securityContext->withoutAuthorizationChecks(function () use ($values, $site, $language) {
+            $cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+            $graph = $cr->getContentGraph(WorkspaceName::forLive());
+            $sites = $graph->findRootNodeAggregateByType(NodeTypeNameFactory::forSites());
+            $siteAggregate = $sites ? $graph->findChildNodeAggregateByName($sites->nodeAggregateId, NodeName::fromString($site)) : null;
+            if ($siteAggregate === null) {
+                $this->outputLine('<error>Site "%s" nicht gefunden.</error>', [$site]);
+                $this->quit(1);
+            }
+            $cr->handle(SetNodeProperties::create(
+                WorkspaceName::forLive(),
+                $siteAggregate->nodeAggregateId,
+                OriginDimensionSpacePoint::fromArray(['language' => $language]),
+                PropertyValuesToWrite::fromArray($values)
+            ));
+            foreach ($values as $key => $value) {
+                $this->outputLine('%s = %s', [$key, $value === '' ? '(leer)' : $value]);
+            }
+        });
+    }
+
     private function seed(string $siteName, string $language): void
     {
         $this->cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));

@@ -60,6 +60,13 @@
         reloadIfChanged: true
         inspector:
           group: links
+    donateUrl:
+      type: string
+      ui:
+        label: 'Unterstützen-Link (Buy Me a Coffee)'
+        reloadIfChanged: true
+        inspector:
+          group: links
     version:
       type: string
       ui:

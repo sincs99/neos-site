@@ -7,6 +7,23 @@ prototype(SaltyPirate.Site:Helper.InviteUrl) < prototype(Neos.Fusion:Value) {
 prototype(SaltyPirate.Site:Helper.SupportUrl) < prototype(Neos.Fusion:Value) {
     value = ${q(site).property('supportUrl') || ''}
 }
+prototype(SaltyPirate.Site:Helper.DonateUrl) < prototype(Neos.Fusion:Value) {
+    value = ${q(site).property('donateUrl') || ''}
+}
+
+##
+# Button "Buy me a coffee" (nur wenn ein Link gesetzt ist)
+#
+prototype(SaltyPirate.Site:Component.DonateButton) < prototype(Neos.Fusion:Component) {
+    url = SaltyPirate.Site:Helper.DonateUrl
+    small = false
+
+    renderer = afx`
+        <a @if.has={props.url} class={'sp-btn sp-btn--coffee' + (props.small ? ' sp-btn--small' : '')} href={props.url} target="_blank" rel="noopener">
+            <span aria-hidden="true">☕</span> Buy me a coffee
+        </a>
+    `
+}
 
 ##
 # Buttons "Add to Discord" und "Join the crew" (zeigen "coming soon", solange kein Link gesetzt ist)
@@ -15,6 +32,7 @@ prototype(SaltyPirate.Site:Component.BotButtons) < prototype(Neos.Fusion:Compone
     invite = SaltyPirate.Site:Helper.InviteUrl
     support = SaltyPirate.Site:Helper.SupportUrl
     showSupport = true
+    showDonate = false
 
     renderer = afx`
         <div class="sp-actions">
@@ -28,6 +46,7 @@ prototype(SaltyPirate.Site:Component.BotButtons) < prototype(Neos.Fusion:Compone
                 <a @if.has={props.support} class="sp-btn sp-btn--ghost" href={props.support} target="_blank" rel="noopener">Join the crew</a>
                 <span @if.none={!props.support} class="sp-btn sp-btn--ghost sp-btn--soon" title="Community server coming soon">Community server <small>soon</small></span>
             </Neos.Fusion:Fragment>
+            <SaltyPirate.Site:Component.DonateButton @if.donate={props.showDonate} />
         </div>
     `
 }

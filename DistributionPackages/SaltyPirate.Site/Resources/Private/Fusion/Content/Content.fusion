@@ -251,7 +251,7 @@ prototype(SaltyPirate.Site:Content.Cta) < prototype(SaltyPirate.Site:Content.Bas
                     <p class="sp-kicker">{props.kicker}</p>
                     <h2 class="sp-h2">{props.headline}</h2>
                     <div class="sp-cta__text">{props.text}</div>
-                    <SaltyPirate.Site:Component.BotButtons />
+                    <SaltyPirate.Site:Component.BotButtons showDonate={true} />
                 </div>
             </div>
         </section>
