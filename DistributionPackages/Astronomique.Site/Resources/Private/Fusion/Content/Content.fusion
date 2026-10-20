@@ -13,48 +13,52 @@ prototype(Astronomique.Site:Content.Base) < prototype(Neos.Neos:ContentComponent
     text = Neos.Neos:Editable {
         property = 'text'
     }
+    caption = Neos.Neos:Editable {
+        property = 'caption'
+        block = false
+    }
     anchor = ${q(node).property('anchor') || null}
     primaryLabel = ${q(node).property('primaryLabel')}
     primaryLink = ${q(node).property('primaryLink')}
     secondaryLabel = ${q(node).property('secondaryLabel')}
     secondaryLink = ${q(node).property('secondaryLink')}
     imageSrc = Astronomique.Site:Helper.ImageSrc {
-        width = 1600
+        width = 1400
     }
 
     @process.convertUris = Neos.Neos:ConvertUris
 }
 
 ##
-# Bühne mit Sternenhimmel
+# Titelblatt
 #
 prototype(Astronomique.Site:Content.Hero) < prototype(Astronomique.Site:Content.Base) {
+    backgroundUrl = ${q(node).property('backgroundUrl')}
+
     renderer = afx`
         <section class="as-hero" id={props.anchor}>
-            <canvas class="as-stars" data-as-stars aria-hidden="true"></canvas>
-            <span class="as-hero__moon" aria-hidden="true"></span>
-            <div class="as-container as-hero__inner">
-                <div class="as-hero__copy">
-                    <p class="as-kicker">{props.kicker}</p>
-                    <h1 class="as-hero__title">{props.headline}</h1>
-                    <div class="as-hero__text">{props.text}</div>
-                    <div class="as-hero__actions">
-                        <a class="as-btn as-btn--gold" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
-                        <a class="as-btn as-btn--ghost" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+            <div class="as-hero__chart" @if.has={props.backgroundUrl} style={'background-image: url(' + props.backgroundUrl + ')'} aria-hidden="true"></div>
+            <div class="as-container">
+                <div class="as-hero__sheet">
+                    <div class="as-hero__copy">
+                        <p class="as-kicker">{props.kicker}</p>
+                        <h1 class="as-hero__title">{props.headline}</h1>
+                        <span class="as-ornament as-ornament--left" aria-hidden="true">❧</span>
+                        <div class="as-hero__text as-dropcap">{props.text}</div>
+                        <div class="as-actions">
+                            <a class="as-btn as-btn--ink" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
+                            <a class="as-btn as-btn--line" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+                        </div>
                     </div>
-                </div>
-                <div class="as-hero__stage">
-                    <span class="as-product__halo" aria-hidden="true"></span>
-                    <img @if.has={props.imageSrc} src={props.imageSrc} alt="" />
+                    <Astronomique.Site:Component.Plate src={props.imageSrc} caption={props.caption} variant="tall" />
                 </div>
             </div>
-            <a class="as-hero__scroll" href="#entdecken" aria-label="Weiter nach unten"><span></span></a>
         </section>
     `
 }
 
 ##
-# Zitat
+# Zitat zwischen Zierlinien
 #
 prototype(Astronomique.Site:Content.Quote) < prototype(Neos.Neos:ContentComponent) {
     quote = Neos.Neos:Editable {
@@ -67,9 +71,9 @@ prototype(Astronomique.Site:Content.Quote) < prototype(Neos.Neos:ContentComponen
     }
 
     renderer = afx`
-        <section class="as-quote" id="entdecken">
+        <section class="as-quote">
             <div class="as-container as-quote__inner">
-                <span class="as-quote__star" aria-hidden="true">✦</span>
+                <span class="as-ornament" aria-hidden="true">❦</span>
                 <blockquote class="as-quote__text">{props.quote}</blockquote>
                 <p class="as-quote__source">{props.source}</p>
             </div>
@@ -78,7 +82,7 @@ prototype(Astronomique.Site:Content.Quote) < prototype(Neos.Neos:ContentComponen
 }
 
 ##
-# Produkte (automatisch aus den Produktseiten)
+# Verzeichnis der Erzeugnisse (automatisch aus den Produktseiten)
 #
 prototype(Astronomique.Site:Content.ProductList) < prototype(Astronomique.Site:Content.Base) {
     products = ${q(site).find('[instanceof Astronomique.Site:Document.Product]').get()}
@@ -87,9 +91,9 @@ prototype(Astronomique.Site:Content.ProductList) < prototype(Astronomique.Site:C
         <section class="as-section as-products" id={props.anchor}>
             <div class="as-container">
                 <Astronomique.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
-                <div class="as-productgrid">
-                    <Neos.Fusion:Loop items={props.products} itemName="product">
-                        <Astronomique.Site:Component.ProductCard product={product} />
+                <div class="as-entries">
+                    <Neos.Fusion:Loop items={props.products} itemName="product" iterationName="iteration">
+                        <Astronomique.Site:Component.ProductCard product={product} number={iteration.cycle} />
                     </Neos.Fusion:Loop>
                 </div>
             </div>
@@ -109,7 +113,7 @@ prototype(Astronomique.Site:Content.ProductList) < prototype(Astronomique.Site:C
 }
 
 ##
-# Text mit Bild
+# Text mit Bildtafel
 #
 prototype(Astronomique.Site:Content.TextImage) < prototype(Astronomique.Site:Content.Base) {
     imageRight = ${q(node).property('imageRight')}
@@ -117,16 +121,14 @@ prototype(Astronomique.Site:Content.TextImage) < prototype(Astronomique.Site:Con
     renderer = afx`
         <section class={'as-section as-textimage' + (props.imageRight ? ' as-textimage--right' : '')} id={props.anchor}>
             <div class="as-container as-textimage__inner">
-                <figure class="as-textimage__media">
-                    <img @if.has={props.imageSrc} src={props.imageSrc} alt="" loading="lazy" />
-                </figure>
+                <Astronomique.Site:Component.Plate src={props.imageSrc} caption={props.caption} />
                 <div class="as-textimage__copy">
                     <p class="as-kicker">{props.kicker}</p>
                     <h2 class="as-h2">{props.headline}</h2>
-                    <div class="as-prose">{props.text}</div>
+                    <div class="as-prose as-dropcap">{props.text}</div>
                     <div class="as-actions" @if.has={props.primaryLabel || props.secondaryLabel}>
-                        <a class="as-btn as-btn--gold" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
-                        <a class="as-btn as-btn--ghost" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+                        <a class="as-btn as-btn--ink" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
+                        <a class="as-btn as-btn--line" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
                     </div>
                 </div>
             </div>
@@ -135,7 +137,7 @@ prototype(Astronomique.Site:Content.TextImage) < prototype(Astronomique.Site:Con
 }
 
 ##
-# Merkmale
+# Merkmale als Bildtafeln
 #
 prototype(Astronomique.Site:Content.Features) < prototype(Astronomique.Site:Content.Base) {
     renderer = afx`
@@ -156,11 +158,19 @@ prototype(Astronomique.Site:Content.Feature) < prototype(Neos.Neos:ContentCompon
     text = Neos.Neos:Editable {
         property = 'text'
     }
+    caption = Neos.Neos:Editable {
+        property = 'caption'
+        block = false
+    }
     icon = ${q(node).property('icon') || 'star'}
+    imageSrc = Astronomique.Site:Helper.ImageSrc {
+        width = 700
+    }
 
     renderer = afx`
         <div class="as-feature">
-            <span class="as-feature__icon"><Astronomique.Site:Helper.Icon name={props.icon} /></span>
+            <Astronomique.Site:Component.Plate @if.image={props.imageSrc} src={props.imageSrc} caption={props.caption} variant="small" />
+            <span class="as-feature__icon" @if.noImage={!props.imageSrc}><Astronomique.Site:Helper.Icon name={props.icon} /></span>
             <h3 class="as-feature__title">{props.title}</h3>
             <div class="as-feature__text">{props.text}</div>
         </div>
@@ -176,26 +186,30 @@ prototype(Astronomique.Site:Content.Text) < prototype(Astronomique.Site:Content.
             <div class="as-container as-container--narrow">
                 <p class="as-kicker">{props.kicker}</p>
                 <h2 class="as-h2">{props.headline}</h2>
-                <div class="as-prose">{props.text}</div>
+                <div class="as-prose as-dropcap as-columns">{props.text}</div>
             </div>
         </section>
     `
 }
 
 ##
-# Aufruf
+# Bezugsquelle mit Siegel
 #
 prototype(Astronomique.Site:Content.Cta) < prototype(Astronomique.Site:Content.Base) {
     renderer = afx`
-        <section class="as-cta" id={props.anchor}>
-            <canvas class="as-stars" data-as-stars aria-hidden="true"></canvas>
-            <div class="as-container as-cta__inner">
-                <p class="as-kicker">{props.kicker}</p>
-                <h2 class="as-h2">{props.headline}</h2>
-                <div class="as-cta__text">{props.text}</div>
-                <div class="as-actions as-actions--center">
-                    <a class="as-btn as-btn--gold" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
-                    <a class="as-btn as-btn--ghost" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+        <section class="as-section as-cta" id={props.anchor}>
+            <div class="as-container">
+                <div class="as-cta__box">
+                    <Astronomique.Site:Component.Seal />
+                    <div class="as-cta__copy">
+                        <p class="as-kicker">{props.kicker}</p>
+                        <h2 class="as-h2">{props.headline}</h2>
+                        <div class="as-cta__text">{props.text}</div>
+                        <div class="as-actions">
+                            <a class="as-btn as-btn--ink" href={props.primaryLink} @if.has={props.primaryLabel}>{props.primaryLabel}</a>
+                            <a class="as-btn as-btn--line" href={props.secondaryLink} @if.has={props.secondaryLabel}>{props.secondaryLabel}</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

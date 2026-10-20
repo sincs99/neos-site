@@ -23,13 +23,13 @@ prototype(Astronomique.Site:Helper.ImageSrc) < prototype(Neos.Fusion:Component) 
 }
 
 ##
-# Linien-Symbole 24x24
+# Linien-Symbole 24x24 (Ersatz, wenn ein Merkmal kein Bild hat)
 #
 prototype(Astronomique.Site:Helper.Icon) < prototype(Neos.Fusion:Component) {
     name = 'star'
 
     renderer = Neos.Fusion:Join {
-        open = '<svg class="as-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        open = '<svg class="as-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
         paths = Neos.Fusion:Match {
             @subject = ${props.name}
             @default = '<path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/>'
@@ -37,14 +37,12 @@ prototype(Astronomique.Site:Helper.Icon) < prototype(Neos.Fusion:Component) {
             leaf = '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.1-6C9.5 14.5 12 13 13 12"/>'
             fruit = '<circle cx="12" cy="14" r="7"/><path d="M12 7c0-2 1-4 4-5"/><path d="M12 7c-1.5-1.5-4-2-6-1 1 2 3.5 2.5 6 1z"/>'
             drop = '<path d="M12 2.7S5 10 5 14.5a7 7 0 0 0 14 0C19 10 12 2.7 12 2.7z"/>'
-            wave = '<path d="M2 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M2 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M2 7c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>'
+            wave = '<path d="M2 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M2 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>'
             sun = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
-            glass = '<path d="M6 3h12l-1.5 8a4.5 4.5 0 0 1-9 0z"/><path d="M12 15.5V21"/><path d="M8 21h8"/><path d="M7 7h10"/>'
-            mountain = '<path d="m8 3 4 8 5-5 5 15H2z"/><path d="m4.1 14.2 4.4-3.2 3 2.3"/>'
+            glass = '<path d="M6 3h12l-1.5 8a4.5 4.5 0 0 1-9 0z"/><path d="M12 15.5V21"/><path d="M8 21h8"/>'
+            mountain = '<path d="m8 3 4 8 5-5 5 15H2z"/>'
             instagram = '<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>'
             facebook = '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'
-            arrow = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>'
-            bag = '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'
         }
         close = '</svg>'
     }
@@ -57,35 +55,83 @@ prototype(Astronomique.Site:Helper.Availability) < prototype(Neos.Fusion:Compone
     value = 'instock'
     renderer = Neos.Fusion:Match {
         @subject = ${props.value}
-        @default = 'Erhältlich'
-        soldout = 'Zurzeit ausverkauft'
-        soon = 'Bald erhältlich'
+        @default = 'Vorrätig'
+        soldout = 'Zurzeit vergriffen'
+        soon = 'Demnächst lieferbar'
     }
 }
 
 ##
-# Abschnittskopf
+# Römische Ziffer 1-12 (für Nummern im Verzeichnis)
+#
+prototype(Astronomique.Site:Helper.Roman) < prototype(Neos.Fusion:Component) {
+    number = 1
+    renderer = Neos.Fusion:Match {
+        @subject = ${'n' + props.number}
+        @default = ${props.number}
+        n1 = 'I'
+        n2 = 'II'
+        n3 = 'III'
+        n4 = 'IV'
+        n5 = 'V'
+        n6 = 'VI'
+        n7 = 'VII'
+        n8 = 'VIII'
+        n9 = 'IX'
+        n10 = 'X'
+    }
+}
+
+##
+# Bildtafel: gerahmtes Bild mit Bildunterschrift
+#
+prototype(Astronomique.Site:Component.Plate) < prototype(Neos.Fusion:Component) {
+    src = null
+    caption = null
+    alt = ''
+    variant = null
+
+    renderer = afx`
+        <figure class={'as-plate' + (props.variant ? ' as-plate--' + props.variant : '')}>
+            <div class="as-plate__frame">
+                <img @if.has={props.src} src={props.src} alt={props.alt} loading="lazy" />
+            </div>
+            <figcaption class="as-plate__caption" @if.has={props.caption}>{props.caption}</figcaption>
+        </figure>
+    `
+}
+
+##
+# Abschnittskopf mit Zierlinie
 #
 prototype(Astronomique.Site:Component.SectionHead) < prototype(Neos.Fusion:Component) {
     kicker = null
     headline = null
     text = null
-    center = true
 
     renderer = afx`
-        <header class={'as-sectionhead' + (props.center ? ' as-sectionhead--center' : '')}>
+        <header class="as-sectionhead">
             <p class="as-kicker" @if.has={props.kicker}>{props.kicker}</p>
             <h2 class="as-h2">{props.headline}</h2>
+            <span class="as-ornament" aria-hidden="true">✶ ✶ ✶</span>
             <div class="as-sectionhead__text" @if.has={props.text}>{props.text}</div>
         </header>
     `
 }
 
 ##
-# Produktkarte (aus einer Produktseite)
+# Rundes Siegel mit umlaufender Schrift
+#
+prototype(Astronomique.Site:Component.Seal) < prototype(Neos.Fusion:Component) {
+    renderer = '<svg class="as-seal" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="as-seal-path" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/></defs><circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width=".6"/><circle cx="100" cy="100" r="58" fill="none" stroke="currentColor" stroke-width=".6"/><text font-size="15" fill="currentColor"><textPath href="#as-seal-path" textLength="452" lengthAdjust="spacing">ASTRONOMIQUE ✶ LIQUOR COMPANY ✶ BALI NIGHTS ✶</textPath></text><path d="m100 70 6.5 17.5 18.5.8-14.5 11.5 5 17.9L100 107.6 84.5 117.7l5-17.9L75 88.3l18.5-.8z" fill="currentColor"/><text x="100" y="140" text-anchor="middle" font-size="11" letter-spacing="2" fill="currentColor">GIN</text></svg>'
+}
+
+##
+# Verzeichnis-Eintrag (aus einer Produktseite)
 #
 prototype(Astronomique.Site:Component.ProductCard) < prototype(Neos.Fusion:Component) {
     product = null
+    number = 1
 
     renderer = Neos.Fusion:Component {
         @apply.props = ${props}
@@ -94,28 +140,25 @@ prototype(Astronomique.Site:Component.ProductCard) < prototype(Neos.Fusion:Compo
         }
         title = ${q(props.product).property('title')}
         subtitle = ${q(props.product).property('subtitle')}
+        teaser = ${q(props.product).property('teaser')}
         price = ${q(props.product).property('price')}
         availability = ${q(props.product).property('availability') || 'instock'}
-        tone = ${q(props.product).property('tone') || 'tropical'}
         imageSrc = Astronomique.Site:Helper.ImageSrc {
             node = ${props.product}
             width = 900
         }
 
         renderer = afx`
-            <a class={'as-product as-tone--' + props.tone} href={props.uri}>
-                <span class="as-product__stage">
-                    <span class="as-product__halo" aria-hidden="true"></span>
-                    <img @if.has={props.imageSrc} src={props.imageSrc} alt={props.title} loading="lazy" />
-                </span>
-                <span class="as-product__body">
-                    <span class={'as-badge as-badge--' + props.availability}><Astronomique.Site:Helper.Availability value={props.availability} /></span>
-                    <span class="as-product__title">{props.title}</span>
-                    <span class="as-product__subtitle" @if.has={props.subtitle}>{props.subtitle}</span>
-                    <span class="as-product__foot">
-                        <span class="as-product__price">{props.price}</span>
-                        <span class="as-product__more">Entdecken <Astronomique.Site:Helper.Icon name="arrow" /></span>
-                    </span>
+            <a class="as-entry" href={props.uri}>
+                <span class="as-entry__no">No. <Astronomique.Site:Helper.Roman number={props.number} /></span>
+                <span class="as-entry__plate"><img @if.has={props.imageSrc} src={props.imageSrc} alt={props.title} loading="lazy" /></span>
+                <span class="as-entry__title">{props.title}</span>
+                <span class="as-entry__subtitle" @if.has={props.subtitle}>{props.subtitle}</span>
+                <span class="as-entry__teaser" @if.has={props.teaser}>{props.teaser}</span>
+                <span class="as-entry__line">
+                    <span class={'as-entry__avail as-entry__avail--' + props.availability}><Astronomique.Site:Helper.Availability value={props.availability} /></span>
+                    <span class="as-entry__dots" aria-hidden="true"></span>
+                    <span class="as-entry__price">{props.price}</span>
                 </span>
             </a>
         `

@@ -118,6 +118,13 @@
         reloadIfChanged: true
         inspector:
           group: product
+    caption:
+      type: string
+      ui:
+        label: 'Bildunterschrift'
+        reloadIfChanged: true
+        inspector:
+          group: product
     tone:
       type: string
       defaultValue: 'tropical'

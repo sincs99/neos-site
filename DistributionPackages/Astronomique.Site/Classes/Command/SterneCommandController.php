@@ -8,6 +8,7 @@ use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\DimensionSpace\OriginDimensionSpacePoint;
 use Neos\ContentRepository\Core\Feature\NodeCreation\Command\CreateNodeAggregateWithNode;
 use Neos\ContentRepository\Core\Feature\NodeCreation\Dto\NodeAggregateIdsByNodePaths;
+use Neos\ContentRepository\Core\Feature\NodeModification\Command\SetNodeProperties;
 use Neos\ContentRepository\Core\Feature\NodeModification\Dto\PropertyValuesToWrite;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
@@ -49,6 +50,48 @@ class SterneCommandController extends CommandController
     {
         $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
             $this->seed($site, $language);
+        });
+    }
+
+    /**
+     * Lexikon-Stil: Bildunterschriften der Produktfotos und Verzeichnis-Titel setzen
+     *
+     * Nur Produktfotos bekommen eine Unterschrift (keine fremden Bilder, Wunsch 20.10.2026).
+     *
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function lexikonCommand(string $language = 'de'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($language) {
+            $cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+            $workspace = WorkspaceName::forLive();
+            $origin = OriginDimensionSpacePoint::fromArray(['language' => $language]);
+            $graph = $cr->getContentGraph($workspace);
+            $count = 0;
+
+            $set = function (string $type, callable $propsFor) use ($cr, $workspace, $origin, $graph, &$count) {
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if (!$aggregate->occupiesDimensionSpacePoint($origin)) {
+                        continue;
+                    }
+                    $props = $propsFor($aggregate->getNodeByOccupiedDimensionSpacePoint($origin));
+                    if ($props) {
+                        $cr->handle(SetNodeProperties::create($workspace, $aggregate->nodeAggregateId, $origin, PropertyValuesToWrite::fromArray($props)));
+                        $count++;
+                    }
+                }
+            };
+
+            $set('Astronomique.Site:Content.Hero', fn () => ['caption' => 'Fig. 1. — Bali Nights, Tropical Dry Gin. 500 ml, 42 % Vol.']);
+            $set('Astronomique.Site:Content.TextImage', fn ($n) => str_contains((string)$n->getProperty('imageUrl'), 'salz')
+                ? ['caption' => 'Fig. 2. — Fleur de Sel aus Mauritius, 100 g.'] : null);
+            $set('Astronomique.Site:Content.ProductList', fn () => ['kicker' => 'Kollektion', 'headline' => 'Verzeichnis der <em>Erzeugnisse</em>']);
+            $set('Astronomique.Site:Document.Product', fn ($n) => match ($n->getProperty('uriPathSegment')) {
+                'bali-nights-gin' => ['caption' => 'Bali Nights, Tropical Dry Gin. 500 ml, 42 % Vol.'],
+                'fleur-de-sel' => ['caption' => 'Fleur de Sel aus Mauritius. 100 g.'],
+                default => null,
+            });
+            $this->outputLine('Angepasst: %d', [$count]);
         });
     }
 

@@ -108,6 +108,14 @@
         reloadIfChanged: true
         inspector:
           group: image
+    caption:
+      type: string
+      ui:
+        inlineEditable: true
+        inline:
+          editorOptions:
+            autoparagraph: false
+            placeholder: 'Bildunterschrift (z. B. Fig. 1 – …)'
 
 # Bühne mit Sternenhimmel und Produktbild
 'Astronomique.Site:Content.Hero':
@@ -117,8 +125,16 @@
     'Astronomique.Site:Mixin.Buttons': true
     'Astronomique.Site:Mixin.Image': true
   ui:
-    label: 'Bühne (Sternenhimmel)'
-    icon: 'star'
+    label: 'Bühne (Titelblatt)'
+    icon: 'book-open'
+  properties:
+    backgroundUrl:
+      type: string
+      ui:
+        label: 'Hintergrund-Tafel als URL (z. B. Sternkarte)'
+        reloadIfChanged: true
+        inspector:
+          group: image
 
 # Zitat / Geschichte als grosser Satz
 'Astronomique.Site:Content.Quote':
@@ -196,6 +212,7 @@
 'Astronomique.Site:Content.Feature':
   superTypes:
     'Astronomique.Site:Content': true
+    'Astronomique.Site:Mixin.Image': true
   ui:
     label: 'Merkmal'
     icon: 'star'
