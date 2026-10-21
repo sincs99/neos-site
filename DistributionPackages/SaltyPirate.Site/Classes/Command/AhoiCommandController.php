@@ -706,6 +706,103 @@ class AhoiCommandController extends CommandController
         });
     }
 
+    /**
+     * Website auf Bot-Version 1.9.2 bringen (21.10.2026: Spieldaten geprüft, alle 25 Inseln, ohne Smugglers' League)
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function update192Command(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        // Älteste zuerst, jede wird oben eingefügt
+        $releases = [
+            ['1.9.1', '2026-10-21', [
+                'Fixed: `/rep set` allows Distinction 0–5 like the game (was 0–50), and a Distinction now counts as 100 levels in the weekly progress',
+                'Removed: the Smugglers’ League from `/rep`, since it has no reputation levels in game',
+                'Fixed: game facts checked against the Sea of Thieves wiki — fish variants (Sun Wrecker, Shadow Stormfish), food healing values (shark is normal meat), Burning Blade pledge vote, Reaper Fortress loot, Siren Shrines, Maiden Voyage, faction rewards and five riddle steps',
+                'Fixed: Golden Sands Outpost is now called Port Merrick (searching "golden sands" still works), and the Treasury of the Lost Ancients is at H-15',
+                'Improved: `/riddle` understands bearings like "West-by-North-West"; `/food` lists healing values and adds Merfruit, Trophy Fish and Megalodon',
+            ]],
+            ['1.9.2', '2026-10-21', [
+                'New: `/riddle` now covers Flintlock Peninsula, so all 25 large islands are in',
+                'Fixed: riddle steps on Ashen Reaches, Cannon Cove, Crescent Isle, Lone Cove and Sailors’ Bounty checked against the wiki — the hints now say whether to dig (with paces), raise the lantern, play a song or read the map',
+            ]],
+        ];
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $releases) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $set = function ($aggregateId, array $values) {
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+            };
+            $nodesOf = function (string $type) use ($graph): array {
+                $result = [];
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if ($aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                        $result[] = [$aggregate, $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)];
+                    }
+                }
+                return $result;
+            };
+
+            $set($siteAggregate->nodeAggregateId, ['version' => '1.9.2']);
+            $this->outputLine('Version 1.9.2 gesetzt');
+
+            // Kennzahlen: alle 25 Inseln, 6 Fraktionen
+            foreach ($nodesOf('SaltyPirate.Site:Content.Stats') as [$aggregate]) {
+                $set($aggregate->nodeAggregateId, ['value2' => '25', 'value3' => '6']);
+                $this->outputLine('Kennzahlen aktualisiert');
+            }
+
+            // Showcases: Rätselhilfe und Gilden-Werkzeuge
+            $replace = [
+                'Stuck on a riddle?' => ['24 of the 25 large islands', 'all 25 large islands'],
+                'Run your guild like a fleet' => [', Athena’s Fortune and the Smugglers’ League', ' and Athena’s Fortune'],
+            ];
+            foreach ($nodesOf('SaltyPirate.Site:Content.Showcase') as [$aggregate, $node]) {
+                $headline = (string)$node->getProperty('headline');
+                if (!isset($replace[$headline])) {
+                    continue;
+                }
+                [$from, $to] = $replace[$headline];
+                $text = (string)$node->getProperty('text');
+                if (str_contains($text, $from)) {
+                    $set($aggregate->nodeAggregateId, ['text' => str_replace($from, $to, $text)]);
+                    $this->outputLine('Showcase "%s" aktualisiert', [$headline]);
+                }
+            }
+
+            // Changelog: 1.9.1 und 1.9.2 oben einfügen, falls noch nicht da
+            foreach ($releases as [$version, $date, $lines]) {
+                foreach ($nodesOf('SaltyPirate.Site:Content.Changelog') as [$aggregate]) {
+                    $collection = $graph->findChildNodeAggregateByName($aggregate->nodeAggregateId, NodeName::fromString('items'));
+                    $first = null;
+                    $exists = false;
+                    foreach ($graph->findChildNodeAggregates($collection->nodeAggregateId) as $child) {
+                        if (!$child->occupiesDimensionSpacePoint($this->origin)) {
+                            continue;
+                        }
+                        $first ??= $child->nodeAggregateId;
+                        $exists = $exists || (string)$child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('version') === $version;
+                    }
+                    if ($exists) {
+                        continue;
+                    }
+                    $items = array_map(fn ($l) => preg_replace('/`([^`]+)`/', '<code>$1</code>', htmlspecialchars($l, ENT_NOQUOTES)), $lines);
+                    $this->cr->handle(CreateNodeAggregateWithNode::create(
+                        $this->workspace,
+                        NodeAggregateId::create(),
+                        NodeTypeName::fromString('SaltyPirate.Site:Content.Release'),
+                        $this->origin,
+                        $collection->nodeAggregateId,
+                        $first,
+                        PropertyValuesToWrite::fromArray(['version' => $version, 'date' => $date, 'text' => '<ul><li>' . implode('</li><li>', $items) . '</li></ul>'])
+                    ));
+                    $this->outputLine('Changelog: %s ergänzt', [$version]);
+                }
+            }
+        });
+    }
+
     /** @return array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, \Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphInterface} */
     private function openSite(string $site, string $language): array
     {
