@@ -773,35 +773,122 @@ class AhoiCommandController extends CommandController
             }
 
             // Changelog: 1.9.1 und 1.9.2 oben einfügen, falls noch nicht da
-            foreach ($releases as [$version, $date, $lines]) {
-                foreach ($nodesOf('SaltyPirate.Site:Content.Changelog') as [$aggregate]) {
-                    $collection = $graph->findChildNodeAggregateByName($aggregate->nodeAggregateId, NodeName::fromString('items'));
-                    $first = null;
-                    $exists = false;
-                    foreach ($graph->findChildNodeAggregates($collection->nodeAggregateId) as $child) {
-                        if (!$child->occupiesDimensionSpacePoint($this->origin)) {
-                            continue;
-                        }
-                        $first ??= $child->nodeAggregateId;
-                        $exists = $exists || (string)$child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('version') === $version;
+            $this->addReleases($graph, $nodesOf('SaltyPirate.Site:Content.Changelog'), $releases);
+        });
+    }
+
+    /**
+     * Website auf Bot-Version 2.0.0 bringen (21.10.2026: Launch, /animal, mehr Rätsel)
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function update200Command(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        // Älteste zuerst, jede wird oben eingefügt
+        $releases = [
+            ['1.9.3', '2026-10-21', [
+                'New: `/riddle` knows six more riddle spots — five on Cannon Cove (Fallen Climber, Forgotten Castaway, Impaled Adventurer, Painted Tale of a Monstrous Foe, Unfortunate Explorer) and the Skull of the Candlemaker on Lone Cove',
+            ]],
+            ['1.9.4', '2026-10-21', [
+                'New: `/riddle` knows the Cursed Skull Piles on Sailors’ Bounty',
+            ]],
+            ['2.0.0', '2026-10-21', [
+                'Launch: Salty Pirate is open for every Sea of Thieves crew! Add it to your server with `/invite`, and `/help` or `/discover` show you around',
+                'Know the seas: `/island` and `/map` for every island, outpost and fort, `/riddle` for all 25 large islands, plus `/worldevent`, `/talltale`, `/faction` and `/commodity`',
+                'Hunter’s Call: `/fish`, `/bait`, `/food` with healing values, and `/cook` timers that remind you before your catch burns',
+                'Animals: `/animal` shows every island with pigs, chickens or snakes, and `/island` lists the animals living there',
+                'Crew tools: `/lfg` crew cards with Join/Leave buttons, `/session` plans with reminders and server events, `/crew` and `/roster` for your guild, `/profile` for gamertag and roles',
+                'Progress: track company reputation with `/rep`, log your haul with `/loot` and climb the `/leaderboard`',
+                'Server setup: `/settings` for timezone, news, weekly reputation summaries and temporary crew voice channels; `/news` brings official Sea of Thieves updates',
+                'Speaks English and German, following your Discord language',
+                'Game facts checked against the Sea of Thieves wiki. Spot something wrong? Tell us with `/feedback`',
+            ]],
+        ];
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $releases) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $set = function ($aggregateId, array $values) {
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+            };
+            $nodesOf = function (string $type) use ($graph): array {
+                $result = [];
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if ($aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                        $result[] = [$aggregate, $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)];
                     }
-                    if ($exists) {
+                }
+                return $result;
+            };
+
+            $set($siteAggregate->nodeAggregateId, ['version' => '2.0.0']);
+            $this->outputLine('Version 2.0.0 gesetzt');
+
+            // Bereich Navigation: /animal nach /island
+            foreach ($nodesOf('SaltyPirate.Site:Content.Category') as [$aggregate, $node]) {
+                if ((string)$node->getProperty('title') !== 'Navigation') {
+                    continue;
+                }
+                $commands = (string)$node->getProperty('commands');
+                if (str_contains($commands, '/animal')) {
+                    continue;
+                }
+                $lines = preg_split('/\r?\n/', $commands);
+                $at = 0;
+                foreach ($lines as $i => $line) {
+                    if (str_starts_with(trim($line), '/island')) {
+                        $at = $i + 1;
+                    }
+                }
+                array_splice($lines, $at, 0, ['/animal | Where to find pigs, chickens and snakes']);
+                $set($aggregate->nodeAggregateId, [
+                    'text' => 'Maps, islands, animals, factions, Tall Tales, riddles, lanterns.',
+                    'commands' => implode("\n", $lines),
+                ]);
+                $this->outputLine('Bereich Navigation: /animal ergänzt');
+            }
+
+            // Changelog: 1.9.3, 1.9.4 und 2.0.0 oben einfügen, falls noch nicht da
+            $this->addReleases($graph, $nodesOf('SaltyPirate.Site:Content.Changelog'), $releases);
+        });
+    }
+
+    /**
+     * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
+     *
+     * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
+     * @param array<array{string, string, string[]}> $releases
+     */
+    private function addReleases($graph, array $changelogs, array $releases): void
+    {
+        foreach ($releases as [$version, $date, $lines]) {
+            foreach ($changelogs as [$aggregate]) {
+                $collection = $graph->findChildNodeAggregateByName($aggregate->nodeAggregateId, NodeName::fromString('items'));
+                $first = null;
+                $exists = false;
+                foreach ($graph->findChildNodeAggregates($collection->nodeAggregateId) as $child) {
+                    if (!$child->occupiesDimensionSpacePoint($this->origin)) {
                         continue;
                     }
-                    $items = array_map(fn ($l) => preg_replace('/`([^`]+)`/', '<code>$1</code>', htmlspecialchars($l, ENT_NOQUOTES)), $lines);
-                    $this->cr->handle(CreateNodeAggregateWithNode::create(
-                        $this->workspace,
-                        NodeAggregateId::create(),
-                        NodeTypeName::fromString('SaltyPirate.Site:Content.Release'),
-                        $this->origin,
-                        $collection->nodeAggregateId,
-                        $first,
-                        PropertyValuesToWrite::fromArray(['version' => $version, 'date' => $date, 'text' => '<ul><li>' . implode('</li><li>', $items) . '</li></ul>'])
-                    ));
-                    $this->outputLine('Changelog: %s ergänzt', [$version]);
+                    $first ??= $child->nodeAggregateId;
+                    $exists = $exists || (string)$child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('version') === $version;
                 }
+                if ($exists) {
+                    continue;
+                }
+                $items = array_map(fn ($l) => preg_replace('/`([^`]+)`/', '<code>$1</code>', htmlspecialchars($l, ENT_NOQUOTES)), $lines);
+                $this->cr->handle(CreateNodeAggregateWithNode::create(
+                    $this->workspace,
+                    NodeAggregateId::create(),
+                    NodeTypeName::fromString('SaltyPirate.Site:Content.Release'),
+                    $this->origin,
+                    $collection->nodeAggregateId,
+                    $first,
+                    PropertyValuesToWrite::fromArray(['version' => $version, 'date' => $date, 'text' => '<ul><li>' . implode('</li><li>', $items) . '</li></ul>'])
+                ));
+                $this->outputLine('Changelog: %s ergänzt', [$version]);
             }
-        });
+        }
     }
 
     /** @return array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, \Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphInterface} */
