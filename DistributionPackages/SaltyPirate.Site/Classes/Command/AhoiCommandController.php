@@ -854,6 +854,30 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Community-Server ist offen (21.10.2026): Hinweis "coming soon" im Aufruf ersetzen
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function communityCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
+            [, $graph] = $this->openSite($site, $language);
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('SaltyPirate.Site:Content.Cta')) as $aggregate) {
+                if (!$aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                    continue;
+                }
+                $text = (string)$aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('text');
+                $new = str_replace('Our community server is coming soon.', 'Questions, bugs or ideas? Join our community server.', $text);
+                if ($new !== $text) {
+                    $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregate->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray(['text' => $new])));
+                    $this->outputLine('Aufruf aktualisiert');
+                }
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
