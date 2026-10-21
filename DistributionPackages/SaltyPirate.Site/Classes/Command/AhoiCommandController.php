@@ -293,13 +293,14 @@ class AhoiCommandController extends CommandController
      * @param string|null $updated Stand, z. B. "1 Nov 2026"
      * @param string|null $currency Währungszeichen, z. B. "$"
      * @param string|null $costs Kostenzeilen "Bezeichnung | Betrag | Hinweis", mehrere Zeilen mit \n getrennt
+     * @param string|null $text Einleitungstext (HTML)
      * @param string $site Knotenname der Site
      * @param string $language Sprache (Dimension) der Inhalte
      */
-    public function fundingCommand(?string $raised = null, ?string $goal = null, ?string $period = null, ?string $updated = null, ?string $currency = null, ?string $costs = null, string $site = 'saltypirate', string $language = 'en_US'): void
+    public function fundingCommand(?string $raised = null, ?string $goal = null, ?string $period = null, ?string $updated = null, ?string $currency = null, ?string $costs = null, ?string $text = null, string $site = 'saltypirate', string $language = 'en_US'): void
     {
         $costs = $costs === null ? null : str_replace('\n', "\n", $costs);
-        $this->securityContext->withoutAuthorizationChecks(function () use ($raised, $goal, $period, $updated, $currency, $costs, $site, $language) {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($raised, $goal, $period, $updated, $currency, $costs, $text, $site, $language) {
             [$siteAggregate, $graph] = $this->openSite($site, $language);
             $main = $graph->findChildNodeAggregateByName($siteAggregate->nodeAggregateId, NodeName::fromString('main'));
             $existing = null;
@@ -313,7 +314,7 @@ class AhoiCommandController extends CommandController
                     $cta = $child->nodeAggregateId;
                 }
             }
-            $values = array_filter(['raised' => $raised, 'goal' => $goal, 'period' => $period, 'updated' => $updated, 'currency' => $currency, 'costs' => $costs], fn ($v) => $v !== null);
+            $values = array_filter(['raised' => $raised, 'goal' => $goal, 'period' => $period, 'updated' => $updated, 'currency' => $currency, 'costs' => $costs, 'text' => $text], fn ($v) => $v !== null);
             if ($existing !== null) {
                 if ($values === []) {
                     $this->outputLine('Kostenbalken gibt es schon. Werte ändern mit --raised, --goal, --period, --updated, --currency, --costs.');

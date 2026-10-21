@@ -383,7 +383,27 @@ code { font-family: var(--sp-mono); }
 .sp-funding__percent { font: 400 40px/1 var(--sp-display); color: var(--sp-gold); }
 .sp-funding__bar { position: relative; height: 18px; margin: 6px 0 16px; background: rgba(6, 19, 25, .7); border: 1px solid var(--sp-line); border-radius: 999px; }
 .sp-funding__fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--sp-teal), var(--sp-gold)); transition: width .6s; }
-.sp-funding__ship { position: absolute; top: -22px; transform: translateX(-50%); font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .5)); }
+.sp-funding__ship { position: absolute; top: -22px; transform: translateX(-50%); font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .5)); transition: left .6s; }
+.sp-funding__card { position: relative; }
+.sp-funding__card [hidden] { display: none; }
+.sp-funding__count { display: block; margin-top: 4px; font-size: 14px; color: var(--sp-muted); }
+.sp-funding__live { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; font: 700 11px/1 var(--sp-font); letter-spacing: .14em; text-transform: uppercase; color: var(--sp-green); }
+.sp-funding__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-green); animation: sp-pulse 2s infinite; }
+@keyframes sp-pulse { 0% { box-shadow: 0 0 0 0 rgba(87, 211, 140, .6); } 70% { box-shadow: 0 0 0 8px rgba(87, 211, 140, 0); } 100% { box-shadow: 0 0 0 0 rgba(87, 211, 140, 0); } }
+.sp-funding__toast { margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; background: rgba(233, 180, 76, .14); border: 1px solid rgba(233, 180, 76, .4); color: var(--sp-gold-2); font-weight: 600; animation: sp-toast .4s ease-out; }
+@keyframes sp-toast { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.sp-funding__card.is-celebrating .sp-funding__ship { animation: sp-sail 1.2s ease-in-out 2; }
+.sp-funding__card.is-celebrating .sp-funding__fill { box-shadow: 0 0 16px rgba(233, 180, 76, .7); }
+@keyframes sp-sail { 0%, 100% { transform: translateX(-50%) rotate(0); } 25% { transform: translateX(-50%) translateY(-4px) rotate(-8deg); } 75% { transform: translateX(-50%) translateY(-2px) rotate(6deg); } }
+.sp-funding__recent { display: grid; gap: 0; margin: 0 0 18px; padding: 0; list-style: none; }
+.sp-funding__recent li { display: grid; grid-template-columns: auto 1fr auto; column-gap: 8px; align-items: baseline; padding: 6px 0; font-size: 14px; }
+.sp-funding__who { max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sp-foam); font-weight: 600; }
+.sp-funding__what { color: var(--sp-text); }
+.sp-funding__when { color: var(--sp-muted); font-size: 13px; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+    .sp-funding__fill, .sp-funding__ship { transition: none; }
+    .sp-funding__dot, .sp-funding__toast, .sp-funding__card.is-celebrating .sp-funding__ship { animation: none; }
+}
 .sp-funding__sum { margin: 0 0 18px; color: var(--sp-text); }
 .sp-funding__sum strong { color: var(--sp-foam); font-size: 20px; }
 .sp-funding__costs { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--sp-line); }

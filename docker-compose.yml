@@ -16,6 +16,8 @@ services:
       DB_NAME: neos
       DB_USER: neos
       DB_PASSWORD: ${DB_PASSWORD}
+      # Salty Pirate Kostenbalken: Signing Secret des Buy-Me-a-Coffee-Webhooks (leer = Webhook aus)
+      BMC_WEBHOOK_SECRET: ${BMC_WEBHOOK_SECRET:-}
     volumes:
       - neos-persistent:/app/Data/Persistent
       - neos-logs:/app/Data/Logs

@@ -1,0 +1,20 @@
+# Kostenbalken live (FundingController)
+-
+  name: 'Buy Me a Coffee webhook'
+  uriPattern: 'bmc-webhook'
+  httpMethods: ['POST']
+  defaults:
+    '@package': 'SaltyPirate.Site'
+    '@controller': 'Funding'
+    '@action': 'webhook'
+    '@format': 'json'
+
+-
+  name: 'Funding status'
+  uriPattern: 'api/funding'
+  httpMethods: ['GET']
+  defaults:
+    '@package': 'SaltyPirate.Site'
+    '@controller': 'Funding'
+    '@action': 'status'
+    '@format': 'json'

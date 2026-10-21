@@ -1,0 +1,11 @@
+# Kostenbalken live: Webhook (prüft selbst die Signatur) und Monatsstand sind öffentlich
+privilegeTargets:
+  'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
+    'SaltyPirate.Site:Funding':
+      matcher: 'method(SaltyPirate\Site\Controller\FundingController->(webhook|status)Action())'
+
+roles:
+  'Neos.Flow:Everybody':
+    privileges:
+      - privilegeTarget: 'SaltyPirate.Site:Funding'
+        permission: GRANT

@@ -334,18 +334,22 @@ prototype(SaltyPirate.Site:Content.Funding) < prototype(SaltyPirate.Site:Content
                             <SaltyPirate.Site:Component.DonateButton />
                         </div>
                     </div>
-                    <div class="sp-funding__card">
+                    <div class="sp-funding__card" data-funding="/api/funding" data-goal={props.goal} data-currency={props.currency}>
                         <div class="sp-funding__head">
-                            <span class="sp-funding__period">{props.period || 'This month'}</span>
-                            <span class="sp-funding__percent">{props.percent} %</span>
+                            <span class="sp-funding__period" data-funding-period>{props.period || 'This month'}</span>
+                            <span class="sp-funding__percent" data-funding-percent>{props.percent} %</span>
                         </div>
-                        <div class="sp-funding__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={props.percent} aria-label="Costs covered">
-                            <span class="sp-funding__fill" style={'width: ' + props.percent + '%'}></span>
-                            <span class="sp-funding__ship" style={'left: ' + props.percent + '%'} aria-hidden="true">⛵</span>
+                        <div class="sp-funding__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={props.percent} aria-label="Costs covered" data-funding-bar>
+                            <span class="sp-funding__fill" style={'width: ' + props.percent + '%'} data-funding-fill></span>
+                            <span class="sp-funding__ship" style={'left: ' + props.percent + '%'} aria-hidden="true" data-funding-ship>⛵</span>
                         </div>
                         <p class="sp-funding__sum">
-                            <strong>{props.currency} {q(node).property('raised') || '0'}</strong> of {props.currency} {q(node).property('goal') || '0'} covered
+                            <strong data-funding-raised>{props.currency} {q(node).property('raised') || '0'}</strong> of {props.currency} {q(node).property('goal') || '0'} covered
+                            <span class="sp-funding__count" data-funding-count hidden></span>
                         </p>
+                        <p class="sp-funding__live" data-funding-live hidden><span class="sp-funding__dot" aria-hidden="true"></span>Live</p>
+                        <p class="sp-funding__toast" data-funding-toast role="status" aria-live="polite" hidden></p>
+                        <ul class="sp-funding__recent" data-funding-recent hidden></ul>
                         <ul class="sp-funding__costs">
                             <Neos.Fusion:Loop items={props.costs} itemName="line">
                                 <li @if.has={String.trim(line)}>
@@ -355,7 +359,7 @@ prototype(SaltyPirate.Site:Content.Funding) < prototype(SaltyPirate.Site:Content
                                 </li>
                             </Neos.Fusion:Loop>
                         </ul>
-                        <p class="sp-funding__updated" @if.has={props.updated}>Updated {props.updated}</p>
+                        <p class="sp-funding__updated" @if.has={props.updated} data-funding-updated>Updated {props.updated}</p>
                     </div>
                 </div>
             </section>

@@ -1,4 +1,10 @@
 Neos:
+  Flow:
+    mvc:
+      routes:
+        # /bmc-webhook und /api/funding (Kostenbalken live) vor den Neos-Seiten
+        'SaltyPirate.Site':
+          position: 'before Neos.Neos'
   Neos:
     sites:
       # Site-Knoten "saltypirate": Englisch ist Standard ("/" zeigt Englisch, wie der Bot)

@@ -12,8 +12,8 @@ prototype(SaltyPirate.Site:Document.Page) < prototype(Neos.Fusion:Component) {
                 attributes.content = ${q(documentNode).property('teaser') || 'Salty Pirate – an unofficial Sea of Thieves companion bot for Discord: riddles, islands, crews, LFG, sessions and more.'}
             }
             fonts = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">'
-            stylesheets.site = afx`<link rel="stylesheet" href={StaticResource.uri('SaltyPirate.Site', 'Public/Styles/main.css')} />`
-            javascripts.site = afx`<script src={StaticResource.uri('SaltyPirate.Site', 'Public/Scripts/main.js')} defer></script>`
+            stylesheets.site = afx`<link rel="stylesheet" href={StaticResource.uri('SaltyPirate.Site', 'Public/Styles/main.css') + '?v=' + String.substr(String.md5(StaticResource.content('SaltyPirate.Site', 'Public/Styles/main.css')), 0, 8)} />`
+            javascripts.site = afx`<script src={StaticResource.uri('SaltyPirate.Site', 'Public/Scripts/main.js') + '?v=' + String.substr(String.md5(StaticResource.content('SaltyPirate.Site', 'Public/Scripts/main.js')), 0, 8)} defer></script>`
         }
 
         bodyTag.attributes.class = ${props.isHome ? 'sp sp--home' : 'sp sp--sub'}
