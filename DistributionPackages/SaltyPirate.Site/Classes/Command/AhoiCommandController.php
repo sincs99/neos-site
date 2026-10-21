@@ -284,6 +284,141 @@ class AhoiCommandController extends CommandController
         });
     }
 
+    /**
+     * Kostenbalken auf der Startseite anlegen (vor dem Aufruf) bzw. Werte ändern
+     *
+     * @param string|null $raised Bereits gedeckt, z. B. 3.50
+     * @param string|null $goal Ziel pro Zeitraum, z. B. 7.42
+     * @param string|null $period Zeitraum, z. B. "November 2026"
+     * @param string|null $updated Stand, z. B. "1 Nov 2026"
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function fundingCommand(?string $raised = null, ?string $goal = null, ?string $period = null, ?string $updated = null, string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($raised, $goal, $period, $updated, $site, $language) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $main = $graph->findChildNodeAggregateByName($siteAggregate->nodeAggregateId, NodeName::fromString('main'));
+            $existing = null;
+            $cta = null;
+            foreach ($graph->findChildNodeAggregates($main->nodeAggregateId) as $child) {
+                $type = $child->nodeTypeName->value;
+                if ($type === 'SaltyPirate.Site:Content.Funding') {
+                    $existing = $child;
+                }
+                if ($type === 'SaltyPirate.Site:Content.Cta') {
+                    $cta = $child->nodeAggregateId;
+                }
+            }
+            $values = array_filter(['raised' => $raised, 'goal' => $goal, 'period' => $period, 'updated' => $updated], fn ($v) => $v !== null);
+            if ($existing !== null) {
+                if ($values === []) {
+                    $this->outputLine('Kostenbalken gibt es schon. Werte ändern mit --raised, --goal, --period, --updated.');
+                    return;
+                }
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $existing->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+                foreach ($values as $k => $v) {
+                    $this->outputLine('%s = %s', [$k, $v]);
+                }
+                return;
+            }
+            $this->cr->handle(CreateNodeAggregateWithNode::create(
+                $this->workspace,
+                NodeAggregateId::create(),
+                NodeTypeName::fromString('SaltyPirate.Site:Content.Funding'),
+                $this->origin,
+                $main->nodeAggregateId,
+                $cta,
+                PropertyValuesToWrite::fromArray(array_merge([
+                    'kicker' => 'Keep the ship afloat',
+                    'headline' => 'Help cover the costs',
+                    'text' => '<p>Salty Pirate is free to use and runs on our own hardware. What it costs is the domain and keeping everything running. If the bot helps your crew, a coffee helps us stay afloat – and here you can see every month how much of the costs the community covers.</p>',
+                    'goal' => '7.42',
+                    'raised' => '0.00',
+                    'currency' => '€',
+                    'period' => 'October 2026',
+                    'costs' => "Domain saltypirate.gg | € 7.42 / month | planned – € 88.98 per year\nServer & hosting | € 0.00 | runs on our own hardware",
+                    'updated' => '21 Oct 2026',
+                    'anchor' => 'support',
+                ], $values))
+            ));
+            $this->outputLine('<success>Kostenbalken angelegt.</success>');
+        });
+    }
+
+    /**
+     * Seite "Terms" (Terms of Service, Entwurf) anlegen; Privacy und Terms aus dem Hauptmenü nehmen
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function termsCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            foreach ($graph->findChildNodeAggregates($siteAggregate->nodeAggregateId) as $child) {
+                if (!$child->occupiesDimensionSpacePoint($this->origin)) {
+                    continue;
+                }
+                $segment = $child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('uriPathSegment');
+                if ($segment === 'terms') {
+                    $this->outputLine('<comment>Seite "Terms" gibt es schon - nichts angelegt.</comment>');
+                    return;
+                }
+                if ($segment === 'privacy') {
+                    $this->cr->handle(SetNodeProperties::create($this->workspace, $child->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray(['hiddenInMenu' => true])));
+                }
+            }
+
+            $main = NodeAggregateId::create();
+            $this->cr->handle(CreateNodeAggregateWithNode::create(
+                $this->workspace,
+                NodeAggregateId::create(),
+                NodeTypeName::fromString('SaltyPirate.Site:Document.Page'),
+                $this->origin,
+                $siteAggregate->nodeAggregateId,
+                null,
+                PropertyValuesToWrite::fromArray([
+                    'title' => 'Terms',
+                    'uriPathSegment' => 'terms',
+                    'teaser' => 'The rules of the ship – what you agree to when you use Salty Pirate.',
+                    'hiddenInMenu' => true,
+                ])
+            )->withTetheredDescendantNodeAggregateIds(NodeAggregateIdsByNodePaths::fromArray(['main' => $main])));
+
+            $this->content($main, 'Text', [
+                'kicker' => 'Draft – to be reviewed',
+                'headline' => 'Terms of Service',
+                'text' => '<p>These terms apply when you add Salty Pirate (“the bot”) to a Discord server or use its commands. By doing so you agree to them.</p>'
+                    . '<p><strong>1. What the bot is.</strong> Salty Pirate is an unofficial, fan-made companion for Sea of Thieves. It is not affiliated with, endorsed or sponsored by Rare Ltd. or Microsoft. Game information is provided as help only and may be incomplete or out of date.</p>'
+                    . '<p><strong>2. Use of the bot.</strong> You may use the bot on your servers in line with Discord’s Terms of Service and Community Guidelines. Do not use it to spam, harass others, or to break or overload the bot (for example with automated command spam).</p>'
+                    . '<p><strong>3. Your content and data.</strong> Profiles, reputation levels, loot entries, sessions and server settings are entered by you and your members and stored so the features work. What is stored and how to remove it is described in our <a href="/en/privacy">Privacy Policy</a>.</p>'
+                    . '<p><strong>4. Availability.</strong> The bot is provided “as is”. We try to keep it running, but there is no guarantee of availability, and features may change or be removed.</p>'
+                    . '<p><strong>5. Liability.</strong> As far as the law allows, we are not liable for damages arising from the use of the bot or from incorrect information.</p>'
+                    . '<p><strong>6. Ending use.</strong> You can stop using the bot at any time by removing it from your server. We may block servers or users that break these terms.</p>'
+                    . '<p><strong>7. Changes.</strong> We may update these terms. The current version is always on this page.</p>'
+                    . '<p><strong>8. Contact.</strong> Questions? Reach us on the support server.</p>',
+            ]);
+            $this->outputLine('<success>Seite "Terms" angelegt, Privacy und Terms aus dem Hauptmenü genommen.</success>');
+        });
+    }
+
+    /** @return array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, \Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphInterface} */
+    private function openSite(string $site, string $language): array
+    {
+        $this->cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+        $this->workspace = WorkspaceName::forLive();
+        $this->origin = OriginDimensionSpacePoint::fromArray(['language' => $language]);
+        $graph = $this->cr->getContentGraph($this->workspace);
+        $sites = $graph->findRootNodeAggregateByType(NodeTypeNameFactory::forSites());
+        $siteAggregate = $sites ? $graph->findChildNodeAggregateByName($sites->nodeAggregateId, NodeName::fromString($site)) : null;
+        if ($siteAggregate === null) {
+            $this->outputLine('<error>Site "%s" nicht gefunden.</error>', [$site]);
+            $this->quit(1);
+        }
+        return [$siteAggregate, $graph];
+    }
+
     private function seed(string $siteName, string $language): void
     {
         $this->cr = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));

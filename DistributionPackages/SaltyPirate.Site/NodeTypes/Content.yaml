@@ -394,3 +394,63 @@
               ul: true
               p: true
               code: true
+
+# Kostenbalken: wie viel der laufenden Kosten die Community deckt (Werte von Hand gepflegt)
+'SaltyPirate.Site:Content.Funding':
+  superTypes:
+    'SaltyPirate.Site:Content': true
+    'SaltyPirate.Site:Mixin.Head': true
+  ui:
+    label: 'Kostenbalken'
+    icon: 'coins'
+    inspector:
+      groups:
+        funding:
+          label: 'Kosten & Spenden'
+          icon: 'coins'
+          position: 5
+  properties:
+    goal:
+      type: string
+      ui:
+        label: 'Ziel pro Zeitraum (Zahl, z. B. 7.42)'
+        reloadIfChanged: true
+        inspector:
+          group: funding
+    raised:
+      type: string
+      ui:
+        label: 'Bereits gedeckt (Zahl, z. B. 3.50)'
+        reloadIfChanged: true
+        inspector:
+          group: funding
+    currency:
+      type: string
+      defaultValue: '€'
+      ui:
+        label: 'Währung'
+        reloadIfChanged: true
+        inspector:
+          group: funding
+    period:
+      type: string
+      ui:
+        label: 'Zeitraum (z. B. October 2026)'
+        reloadIfChanged: true
+        inspector:
+          group: funding
+    costs:
+      type: string
+      ui:
+        label: 'Kostenliste (eine Zeile: „Bezeichnung | Betrag | Hinweis“)'
+        reloadIfChanged: true
+        inspector:
+          group: funding
+          editor: 'Neos.Neos/Inspector/Editors/TextAreaEditor'
+    updated:
+      type: string
+      ui:
+        label: 'Stand (z. B. 21 Oct 2026)'
+        reloadIfChanged: true
+        inspector:
+          group: funding

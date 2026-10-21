@@ -294,3 +294,58 @@ prototype(SaltyPirate.Site:Content.Step) < prototype(Neos.Neos:ContentComponent)
     `
     @process.convertUris = Neos.Neos:ConvertUris
 }
+
+##
+# Kostenbalken
+#
+prototype(SaltyPirate.Site:Content.Funding) < prototype(SaltyPirate.Site:Content.Base) {
+    goal = ${String.toFloat(String.replace(q(node).property('goal') || '0', ',', '.'))}
+    raised = ${String.toFloat(String.replace(q(node).property('raised') || '0', ',', '.'))}
+    currency = ${q(node).property('currency') || '€'}
+    period = ${q(node).property('period')}
+    updated = ${q(node).property('updated')}
+    costs = ${String.pregSplit(q(node).property('costs') || '', '/\r?\n/')}
+
+    renderer = Neos.Fusion:Component {
+        @apply.props = ${props}
+        percent = ${props.goal > 0 ? Math.min(100, Math.round(props.raised / props.goal * 100)) : 0}
+
+        renderer = afx`
+            <section class="sp-section sp-funding" id={props.anchor || 'support'}>
+                <div class="sp-container sp-funding__inner">
+                    <div class="sp-funding__copy">
+                        <p class="sp-kicker">{props.kicker}</p>
+                        <h2 class="sp-h2">{props.headline}</h2>
+                        <div class="sp-prose">{props.text}</div>
+                        <div class="sp-actions">
+                            <SaltyPirate.Site:Component.DonateButton />
+                        </div>
+                    </div>
+                    <div class="sp-funding__card">
+                        <div class="sp-funding__head">
+                            <span class="sp-funding__period">{props.period || 'This month'}</span>
+                            <span class="sp-funding__percent">{props.percent} %</span>
+                        </div>
+                        <div class="sp-funding__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={props.percent} aria-label="Costs covered">
+                            <span class="sp-funding__fill" style={'width: ' + props.percent + '%'}></span>
+                            <span class="sp-funding__ship" style={'left: ' + props.percent + '%'} aria-hidden="true">⛵</span>
+                        </div>
+                        <p class="sp-funding__sum">
+                            <strong>{props.currency} {q(node).property('raised') || '0'}</strong> of {props.currency} {q(node).property('goal') || '0'} covered
+                        </p>
+                        <ul class="sp-funding__costs">
+                            <Neos.Fusion:Loop items={props.costs} itemName="line">
+                                <li @if.has={String.trim(line)}>
+                                    <span class="sp-funding__label">{String.trim(String.split(line, '|')[0])}</span>
+                                    <span class="sp-funding__amount">{String.trim(String.split(line, '|')[1] || '')}</span>
+                                    <span class="sp-funding__note" @if.has={String.trim(String.split(line, '|')[2] || '')}>{String.trim(String.split(line, '|')[2] || '')}</span>
+                                </li>
+                            </Neos.Fusion:Loop>
+                        </ul>
+                        <p class="sp-funding__updated" @if.has={props.updated}>Updated {props.updated}</p>
+                    </div>
+                </div>
+            </section>
+        `
+    }
+}

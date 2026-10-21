@@ -374,3 +374,22 @@ code { font-family: var(--sp-mono); }
     .sp-step { padding: 76px 20px 24px; }
     .sp-step::before { left: 20px; top: 18px; width: 44px; height: 44px; font-size: 26px; }
 }
+
+/* Kostenbalken */
+.sp-funding__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 460px); gap: 64px; align-items: center; }
+.sp-funding__card { padding: 28px; background: var(--sp-sea-2); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); }
+.sp-funding__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.sp-funding__period { font: 700 13px/1 var(--sp-font); letter-spacing: .14em; text-transform: uppercase; color: var(--sp-muted); }
+.sp-funding__percent { font: 400 40px/1 var(--sp-display); color: var(--sp-gold); }
+.sp-funding__bar { position: relative; height: 18px; margin: 6px 0 16px; background: rgba(6, 19, 25, .7); border: 1px solid var(--sp-line); border-radius: 999px; }
+.sp-funding__fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--sp-teal), var(--sp-gold)); transition: width .6s; }
+.sp-funding__ship { position: absolute; top: -22px; transform: translateX(-50%); font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .5)); }
+.sp-funding__sum { margin: 0 0 18px; color: var(--sp-text); }
+.sp-funding__sum strong { color: var(--sp-foam); font-size: 20px; }
+.sp-funding__costs { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--sp-line); }
+.sp-funding__costs li { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--sp-line); }
+.sp-funding__label { color: var(--sp-foam); font-weight: 600; }
+.sp-funding__amount { font: 600 14px/1.6 var(--sp-mono); color: var(--sp-gold-2); text-align: right; }
+.sp-funding__note { grid-column: 1 / -1; font-size: 14px; color: var(--sp-muted); }
+.sp-funding__updated { margin: 12px 0 0; font-size: 13px; color: var(--sp-muted); }
+@media (max-width: 1000px) { .sp-funding__inner { grid-template-columns: 1fr; gap: 40px; } }
