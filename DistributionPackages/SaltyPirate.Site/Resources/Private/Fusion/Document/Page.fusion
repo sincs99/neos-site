@@ -6,7 +6,6 @@ prototype(SaltyPirate.Site:Document.Page) < prototype(Neos.Fusion:Component) {
         head {
             metaViewport = '<meta name="viewport" content="width=device-width, initial-scale=1">'
             themeColor = '<meta name="theme-color" content="#081a22">'
-            robots = '<meta name="robots" content="noindex, nofollow">'
             description = Neos.Fusion:Tag {
                 tagName = 'meta'
                 attributes.name = 'description'
