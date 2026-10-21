@@ -190,11 +190,24 @@ prototype(SaltyPirate.Site:Content.Permissions) < prototype(SaltyPirate.Site:Con
 # Changelog
 #
 prototype(SaltyPirate.Site:Content.Changelog) < prototype(SaltyPirate.Site:Content.Base) {
+    limit = ${String.toInteger(q(node).property('limit') || '0')}
+    releases = ${q(node).children('[instanceof SaltyPirate.Site:Collection.Releases]').children('[instanceof SaltyPirate.Site:Content.Release]').get()}
+    changelogUri = Neos.Neos:NodeUri {
+        node = ${q(site).children('[uriPathSegment="changelog"]').get(0)}
+        @if.exists = ${q(site).children('[uriPathSegment="changelog"]').count() > 0}
+    }
+
     renderer = afx`
         <section class="sp-section sp-changelog" id={props.anchor}>
             <div class="sp-container sp-container--narrow">
                 <SaltyPirate.Site:Component.SectionHead kicker={props.kicker} headline={props.headline} text={props.text} />
-                <Neos.Neos:ContentCollection nodePath="items" attributes.class={['sp-releases']} />
+                <Neos.Neos:ContentCollection @if.all={props.limit <= 0} nodePath="items" attributes.class={['sp-releases']} />
+                <div @if.some={props.limit > 0} class="sp-releases">
+                    <Neos.Fusion:Loop items={Array.slice(props.releases, 0, props.limit)} itemName="node">
+                        <Neos.Neos:ContentCase />
+                    </Neos.Fusion:Loop>
+                </div>
+                <p @if.more={props.limit > 0 && props.changelogUri} class="sp-changelog__more"><a class="sp-btn sp-btn--ghost sp-btn--small" href={props.changelogUri}>Full changelog</a></p>
             </div>
         </section>
     `

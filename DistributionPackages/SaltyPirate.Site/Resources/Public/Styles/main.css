@@ -393,3 +393,5 @@ code { font-family: var(--sp-mono); }
 .sp-funding__note { grid-column: 1 / -1; font-size: 14px; color: var(--sp-muted); }
 .sp-funding__updated { margin: 12px 0 0; font-size: 13px; color: var(--sp-muted); }
 @media (max-width: 1000px) { .sp-funding__inner { grid-template-columns: 1fr; gap: 40px; } }
+
+.sp-changelog__more { margin: 26px 0 0; text-align: center; }

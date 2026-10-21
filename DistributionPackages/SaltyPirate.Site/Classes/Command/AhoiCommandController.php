@@ -403,6 +403,217 @@ class AhoiCommandController extends CommandController
         });
     }
 
+    /**
+     * Website auf Bot-Version 1.8.1 bringen (Stand 21.10.2026, nach der Umstellung auf globale Befehle)
+     *
+     * Befehlslisten aus commands/registry.py, Versionen aus CHANGELOG.md, Rechte aus commands/invite.py.
+     * Legt fehlende Versionen im Changelog an, ändert sonst nur Eigenschaften bestehender Elemente.
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function update181Command(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $categories = [
+            'Start here' => ['🏴', 'Discover features, server settings, bot status, feedback.', [
+                '/discover | Guided entry point into Salty Pirate features',
+                '/help | Show the Salty Pirate command overview',
+                '/invite | Add Salty Pirate to your server or join the support server',
+                '/settings | Show or update server settings (Manage Server)',
+                '/feedback | Send the crew a bug report, a wrong fact or an idea',
+                '/usage | Which commands this server uses (last 30 days)',
+                '/ping | Check if the bot is alive',
+                '/about | Version, uptime and links for Salty Pirate',
+            ]],
+            'Navigation' => ['🗺️', 'Maps, islands, factions, Tall Tales, riddles, lanterns.', [
+                '/map | Coordinates and region lookup for an island',
+                '/island | Show island info or list supported islands',
+                '/faction | Faction encyclopedia, including all trading companies',
+                '/talltale | Tall Tale helper and progression hints',
+                '/riddle | Riddle map help: island landmarks and what the clue means',
+                '/lantern | Lantern color meanings',
+                '/skeleton | Skeleton enemy guide',
+            ]],
+            'Survival' => ['🎣', 'Fish, bait, food, cooking, Hunter’s Call, Megalodon.', [
+                '/fish | Show fish overview or a specific fish',
+                '/bait | Bait requirements for a fish or bait family',
+                '/food | Show food overview or a specific food item',
+                '/cook | Start a cooking reminder or show cook info',
+                '/hunterscall | Hunter’s Call tips',
+                '/megalodon | Megalodon survival tips',
+            ]],
+            'Voyage' => ['📦', 'Commodities, routes, world events, voyage and fort tips.', [
+                '/voyage | Voyage planning tips',
+                '/fort | Skeleton fort tips',
+                '/worldevent | Strategy briefing for a world event',
+                '/commodity | Merchant commodity helper',
+                '/routes | Merchant route tips',
+            ]],
+            'Guild' => ['🏰', 'Pirate profiles, roster, crews and reputation.', [
+                '/profile set | Create or update your pirate profile',
+                '/profile show | Show a member’s pirate profile',
+                '/roster | Guild roster: gamertags, platforms and preferred roles',
+                '/rep set | Log your current level with a faction',
+                '/rep show | Reputation levels and this week’s progress',
+                '/rep board | Who is furthest with a faction',
+                '/rep week | Level-ups in this server over the last 7 days',
+                '/crew create | Create a crew with its own role (admins)',
+                '/crew join | Ask to join a crew – the captain gets Accept/Decline',
+                '/crew info | Members and captain of a crew',
+            ]],
+            'Community' => ['👥', 'Crew finder, session planner, loot leaderboard, news.', [
+                '/lfg | Looking-for-crew card with Join/Leave buttons',
+                '/session plan | Plan a session with Going/Maybe/Can’t and reminders',
+                '/session list | Upcoming sessions in this server',
+                '/loot log | Log what you earned this session',
+                '/loot me | Your own loot totals',
+                '/leaderboard | Server loot leaderboard',
+                '/news | Latest Sea of Thieves announcements',
+            ]],
+        ];
+        $releases = [
+            ['1.8.1', '2026-10-21', [
+                'Improved: Salty Pirate is ready for every server – slash commands are now available everywhere, not only on the test server',
+                'Improved: the bot can run without prefix commands, so it no longer needs to read message content',
+            ]],
+            ['1.8.0', '2026-10-12', [
+                'New: the bot speaks German and English – command descriptions, buttons, replies and cards follow your Discord language; shared cards (LFG, sessions, crew requests, reminders) follow the server’s language',
+                'Note: game facts (fish, islands, guides, riddles) stay English until they have been verified in German',
+            ]],
+            ['1.7.0', '2026-10-12', [
+                'New: `/feedback` – send the crew a bug report, a wrong fact or an idea straight from Discord',
+                'New: `/usage` shows admins which commands their server really uses (last 30 days)',
+                'Removed: `/trading` (use `/faction`, which knows all nine companies), `/stats` (use `/loot`) and the `$event` timers (world events have no fixed timer in game)',
+                'Fixed: the fish overview now lists every fish, the weekly reputation summary is no longer lost, and commands sync even if a startup step fails',
+            ]],
+            ['1.6.0', '2026-10-12', [
+                'New: guild roster – `/profile set` and `/roster`',
+                'New: crews with their own Discord role – `/crew create`, `/crew captain`, `/crew join` with Accept/Decline, `/crew leave`',
+                'New: reputation tracker – `/rep set`, `/rep show`, `/rep board`, `/rep week` and a weekly summary every Monday',
+                'New: `/riddle` covers 24 large islands with landmarks, fuzzy clue matching and general riddle steps',
+                'Improved: cooking reminders keep running after a restart; `/about` shows version, uptime and what’s new',
+                'Fixed: the invite link now includes Manage Roles, needed for crew roles',
+            ]],
+        ];
+        $invite = 'https://discord.com/oauth2/authorize?client_id=1034179540630650880&scope=bot+applications.commands&permissions=283736656912';
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $categories, $releases, $invite) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $set = function ($aggregateId, array $values) {
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+            };
+            $nodesOf = function (string $type) use ($graph): array {
+                $result = [];
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if ($aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                        $result[] = [$aggregate, $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)];
+                    }
+                }
+                return $result;
+            };
+
+            // Bot-Links + Version
+            $set($siteAggregate->nodeAggregateId, ['version' => '1.8.1', 'inviteUrl' => $invite]);
+            $this->outputLine('Version 1.8.1 + Einladungslink gesetzt');
+
+            // Befehlsbereiche
+            $n = 0;
+            foreach ($nodesOf('SaltyPirate.Site:Content.Category') as [$aggregate, $node]) {
+                $title = (string)$node->getProperty('title');
+                if (isset($categories[$title])) {
+                    [$emoji, $text, $commands] = $categories[$title];
+                    $set($aggregate->nodeAggregateId, ['emoji' => $emoji, 'text' => $text, 'commands' => implode("\n", $commands)]);
+                    $n++;
+                }
+            }
+            $this->outputLine('Befehlsbereiche aktualisiert: %d', [$n]);
+
+            // Changelog: fehlende Versionen oben einfügen; auf der Startseite nur die 3 neuesten zeigen
+            foreach ($nodesOf('SaltyPirate.Site:Content.Changelog') as [$aggregate, $node]) {
+                $collection = $graph->findChildNodeAggregateByName($aggregate->nodeAggregateId, NodeName::fromString('items'));
+                $existing = [];
+                $first = null;
+                foreach ($graph->findChildNodeAggregates($collection->nodeAggregateId) as $child) {
+                    if (!$child->occupiesDimensionSpacePoint($this->origin)) {
+                        continue;
+                    }
+                    $first ??= $child->nodeAggregateId;
+                    $existing[] = (string)$child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('version');
+                }
+                $added = 0;
+                foreach ($releases as [$version, $date, $lines]) {
+                    if (in_array($version, $existing, true)) {
+                        continue;
+                    }
+                    $items = array_map(fn ($l) => preg_replace('/`([^`]+)`/', '<code>$1</code>', htmlspecialchars($l, ENT_NOQUOTES)), $lines);
+                    $this->cr->handle(CreateNodeAggregateWithNode::create(
+                        $this->workspace,
+                        NodeAggregateId::create(),
+                        NodeTypeName::fromString('SaltyPirate.Site:Content.Release'),
+                        $this->origin,
+                        $collection->nodeAggregateId,
+                        $first,
+                        PropertyValuesToWrite::fromArray(['version' => $version, 'date' => $date, 'text' => '<ul><li>' . implode('</li><li>', $items) . '</li></ul>'])
+                    ));
+                    $added++;
+                }
+                $isHome = count($existing) < 6 || (int)$node->getProperty('limit') > 0;
+                if ($isHome) {
+                    $set($aggregate->nodeAggregateId, ['limit' => '3']);
+                }
+                $this->outputLine('Changelog (%s): %d Versionen ergänzt', [$isHome ? 'Startseite, zeigt 3' : 'Seite', $added]);
+            }
+
+            // Berechtigungen (commands/invite.py)
+            foreach ($nodesOf('SaltyPirate.Site:Content.Permissions') as [$aggregate]) {
+                $set($aggregate->nodeAggregateId, ['items' => implode("\n", [
+                    'View channels & read history | to answer where the command was used',
+                    'Send messages & messages in threads | to post replies, cards and reminders',
+                    'Embed links & attach files | for rich cards and island images',
+                    'Use external emojis | for nicer cards',
+                    'Manage events | only if you turn on server events for sessions',
+                    'Manage channels | only for temporary crew voice channels',
+                    'Manage roles | only for the mentionable roles of your crews',
+                ])]);
+                $this->outputLine('Berechtigungen aktualisiert');
+            }
+
+            // Kennzahlen: zweite Sprache statt Kategorienzahl
+            foreach ($nodesOf('SaltyPirate.Site:Content.Stats') as [$aggregate]) {
+                $set($aggregate->nodeAggregateId, ['value4' => '2', 'label4' => 'languages – English & German']);
+            }
+
+            // Setup: Schritt Crews (Manage Roles ist jetzt im Einladungslink)
+            foreach ($nodesOf('SaltyPirate.Site:Content.Step') as [$aggregate, $node]) {
+                if ((string)$node->getProperty('title') === 'Crews with their own role') {
+                    $set($aggregate->nodeAggregateId, ['text' => '<p>With <code>/crew create</code> every crew gets a mentionable Discord role. The invite already asks for <strong>Manage Roles</strong> – one thing is left for you:</p><ul><li>In <em>Server Settings → Roles</em>, drag the bot’s role <strong>above</strong> the crew roles. Discord only lets a bot manage roles below its own.</li></ul><p>Then pick captains with <code>/crew captain</code>. If you invited the bot before version 1.6.0, give its role <strong>Manage Roles</strong> by hand or invite it again.</p>']);
+                    $this->outputLine('Setup-Schritt Crews aktualisiert');
+                }
+            }
+
+            // Aufruf: Einladungslink ist jetzt da
+            foreach ($nodesOf('SaltyPirate.Site:Content.Cta') as [$aggregate]) {
+                $set($aggregate->nodeAggregateId, ['text' => '<p>Add the bot to your Discord in a few clicks – it asks only for the permissions its features use. Our community server is coming soon.</p>']);
+            }
+
+            // Texte: Befehlsseite und Datenschutz
+            foreach ($nodesOf('SaltyPirate.Site:Content.Text') as [$aggregate, $node]) {
+                $headline = (string)$node->getProperty('headline');
+                if ($headline === 'Prefix commands still work') {
+                    $set($aggregate->nodeAggregateId, [
+                        'headline' => 'English or German',
+                        'text' => '<p>Salty Pirate speaks <strong>English and German</strong>: command descriptions, buttons and replies follow your Discord language, shared cards like LFG posts and sessions follow your server’s language. Game facts stay English until they have been checked in German.</p><p>Slash commands are the way to use the bot. Prefix commands like <code>$fish</code> still work as a fallback where the bot can read messages.</p>',
+                    ]);
+                    $this->outputLine('Text Befehlsseite aktualisiert');
+                }
+                if ($headline === 'What Salty Pirate stores') {
+                    $set($aggregate->nodeAggregateId, ['text' => '<p>Salty Pirate runs on our own server. To make its features work, it stores per Discord server:</p><ul><li><strong>Server settings</strong> such as channels and timezone</li><li><strong>LFG posts, sessions</strong> and crew voice channels</li><li><strong>Pirate profiles</strong> (gamertag, platform, roles, play times) that members enter themselves</li><li><strong>Crews, reputation levels and loot entries</strong> that members log</li><li><strong>Cooking reminders</strong> until they are sent</li><li><strong>Command usage counts</strong> per server, so admins can see with <code>/usage</code> what their server uses (last 30 days)</li></ul><p>When you send <code>/feedback</code>, your message is posted to our support server so we can read it.</p><p>You can delete your profile with <code>/profile clear</code> and fix loot entries with <code>/loot undo</code>. For anything else, contact us on the support server.</p>']);
+                    $this->outputLine('Datenschutztext aktualisiert');
+                }
+            }
+        });
+    }
+
     /** @return array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, \Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphInterface} */
     private function openSite(string $site, string $language): array
     {

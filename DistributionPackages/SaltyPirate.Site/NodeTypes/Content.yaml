@@ -274,6 +274,14 @@
   ui:
     label: 'Changelog'
     icon: 'history'
+  properties:
+    limit:
+      type: string
+      ui:
+        label: 'Nur die neuesten N Versionen zeigen (leer = alle)'
+        reloadIfChanged: true
+        inspector:
+          group: 'type'
   childNodes:
     items:
       type: 'SaltyPirate.Site:Collection.Releases'
