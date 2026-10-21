@@ -110,7 +110,7 @@ prototype(SaltyPirate.Site:Component.Footer) < prototype(Neos.Fusion:Component) 
                         <ul>
                             <li @if.has={props.support}><a href={props.support} target="_blank" rel="noopener">Support server</a></li>
                             <li @if.none={!props.support}><span class="sp-muted">Support server – coming soon</span></li>
-                            <li @if.has={props.donate}><a href={props.donate} target="_blank" rel="noopener">☕ Buy me a coffee</a></li>
+                            <li @if.has={props.donate}><a href={props.donate} target="_blank" rel="noopener">🍺 Buy the crew a grog</a></li>
                         </ul>
                     </div>
                 </div>

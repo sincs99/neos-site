@@ -18,7 +18,8 @@
     }
 })();
 
-// Salty Pirate: Kostenbalken live (Spenden über den Buy-Me-a-Coffee-Webhook, /api/funding)
+// Salty Pirate: Kostenbalken live (ein Kaffee bei BMC = ein Grog auf der Seite)
+// (Spenden über den Buy-Me-a-Coffee-Webhook, /api/funding)
 (function () {
     var card = document.querySelector('[data-funding]');
     if (!card || !window.fetch) { return; }
@@ -39,14 +40,14 @@
         return d + (d === 1 ? ' day ago' : ' days ago');
     };
     var what = function (r) {
-        if (r.monthly) { return 'supports monthly'; }
-        if (r.coffees) { return 'bought ' + r.coffees + (r.coffees === 1 ? ' coffee' : ' coffees'); }
+        if (r.monthly) { return 'keeps the grog flowing every month'; }
+        if (r.coffees) { return 'poured ' + r.coffees + (r.coffees === 1 ? ' grog' : ' grogs'); }
         return 'chipped in';
     };
 
     var celebrate = function (r) {
         var toast = el('toast');
-        toast.textContent = 'Thanks, ' + r.name + '! ☕';
+        toast.textContent = 'Yo-ho, ' + r.name + '! A grog for the crew 🍺';
         toast.hidden = false;
         card.classList.remove('is-celebrating');
         void card.offsetWidth;

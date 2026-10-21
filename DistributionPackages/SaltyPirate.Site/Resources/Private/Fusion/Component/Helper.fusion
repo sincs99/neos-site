@@ -12,7 +12,7 @@ prototype(SaltyPirate.Site:Helper.DonateUrl) < prototype(Neos.Fusion:Value) {
 }
 
 ##
-# Button "Buy me a coffee" (nur wenn ein Link gesetzt ist)
+# Button "Buy the crew a grog" (Buy Me a Coffee) (nur wenn ein Link gesetzt ist)
 #
 prototype(SaltyPirate.Site:Component.DonateButton) < prototype(Neos.Fusion:Component) {
     url = SaltyPirate.Site:Helper.DonateUrl
@@ -20,7 +20,7 @@ prototype(SaltyPirate.Site:Component.DonateButton) < prototype(Neos.Fusion:Compo
 
     renderer = afx`
         <a @if.has={props.url} class={'sp-btn sp-btn--coffee' + (props.small ? ' sp-btn--small' : '')} href={props.url} target="_blank" rel="noopener">
-            <span aria-hidden="true">☕</span> Buy me a coffee
+            <span aria-hidden="true">🍺</span> Buy the crew a grog
         </a>
     `
 }
