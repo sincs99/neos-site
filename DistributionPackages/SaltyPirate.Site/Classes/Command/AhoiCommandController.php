@@ -617,6 +617,95 @@ class AhoiCommandController extends CommandController
         });
     }
 
+    /**
+     * Website auf Bot-Version 1.9.0 bringen (21.10.2026: Prefix-Befehle und /routes entfernt)
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function update190Command(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $release = ['1.9.0', '2026-10-21', [
+            'Removed: prefix commands like `$fish` and `$cook` – every command is a slash command now (`/fish`, `/cook remind_me:True`, …)',
+            'Removed: `$pig`, `$chicken` and `$snakes`, whose island lists were outdated',
+            'Removed: `/routes`, whose trade tips were outdated; `/commodity` and `/faction` still cover trading',
+        ]];
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $release) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $set = function ($aggregateId, array $values) {
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+            };
+            $nodesOf = function (string $type) use ($graph): array {
+                $result = [];
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if ($aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                        $result[] = [$aggregate, $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)];
+                    }
+                }
+                return $result;
+            };
+
+            $set($siteAggregate->nodeAggregateId, ['version' => '1.9.0']);
+            $this->outputLine('Version 1.9.0 gesetzt');
+
+            // Bereich Voyage ohne /routes
+            foreach ($nodesOf('SaltyPirate.Site:Content.Category') as [$aggregate, $node]) {
+                if ((string)$node->getProperty('title') === 'Voyage') {
+                    $set($aggregate->nodeAggregateId, [
+                        'text' => 'Commodities, world events, voyage and fort tips.',
+                        'commands' => implode("\n", [
+                            '/voyage | Voyage planning tips',
+                            '/fort | Skeleton fort tips',
+                            '/worldevent | Strategy briefing for a world event',
+                            '/commodity | Merchant commodity helper',
+                        ]),
+                    ]);
+                    $this->outputLine('Bereich Voyage aktualisiert');
+                }
+            }
+
+            // Changelog: 1.9.0 oben einfügen, falls noch nicht da
+            [$version, $date, $lines] = $release;
+            foreach ($nodesOf('SaltyPirate.Site:Content.Changelog') as [$aggregate]) {
+                $collection = $graph->findChildNodeAggregateByName($aggregate->nodeAggregateId, NodeName::fromString('items'));
+                $first = null;
+                $exists = false;
+                foreach ($graph->findChildNodeAggregates($collection->nodeAggregateId) as $child) {
+                    if (!$child->occupiesDimensionSpacePoint($this->origin)) {
+                        continue;
+                    }
+                    $first ??= $child->nodeAggregateId;
+                    $exists = $exists || (string)$child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('version') === $version;
+                }
+                if ($exists) {
+                    continue;
+                }
+                $items = array_map(fn ($l) => preg_replace('/`([^`]+)`/', '<code>$1</code>', htmlspecialchars($l, ENT_NOQUOTES)), $lines);
+                $this->cr->handle(CreateNodeAggregateWithNode::create(
+                    $this->workspace,
+                    NodeAggregateId::create(),
+                    NodeTypeName::fromString('SaltyPirate.Site:Content.Release'),
+                    $this->origin,
+                    $collection->nodeAggregateId,
+                    $first,
+                    PropertyValuesToWrite::fromArray(['version' => $version, 'date' => $date, 'text' => '<ul><li>' . implode('</li><li>', $items) . '</li></ul>'])
+                ));
+                $this->outputLine('Changelog: %s ergänzt', [$version]);
+            }
+
+            // Befehlsseite: Hinweis auf Prefix-Befehle ersetzen
+            foreach ($nodesOf('SaltyPirate.Site:Content.Text') as [$aggregate, $node]) {
+                if ((string)$node->getProperty('headline') === 'English or German') {
+                    $set($aggregate->nodeAggregateId, [
+                        'text' => '<p>Salty Pirate speaks <strong>English and German</strong>: command descriptions, buttons and replies follow your Discord language, shared cards like LFG posts and sessions follow your server’s language. Game facts stay English until they have been checked in German.</p><p>Every command is a slash command – type <code>/</code> in Discord and pick one, or start with <code>/discover</code>.</p>',
+                    ]);
+                    $this->outputLine('Text Befehlsseite aktualisiert');
+                }
+            }
+        });
+    }
+
     /** @return array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, \Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphInterface} */
     private function openSite(string $site, string $language): array
     {
