@@ -291,12 +291,15 @@ class AhoiCommandController extends CommandController
      * @param string|null $goal Ziel pro Zeitraum, z. B. 7.42
      * @param string|null $period Zeitraum, z. B. "November 2026"
      * @param string|null $updated Stand, z. B. "1 Nov 2026"
+     * @param string|null $currency Währungszeichen, z. B. "$"
+     * @param string|null $costs Kostenzeilen "Bezeichnung | Betrag | Hinweis", mehrere Zeilen mit \n getrennt
      * @param string $site Knotenname der Site
      * @param string $language Sprache (Dimension) der Inhalte
      */
-    public function fundingCommand(?string $raised = null, ?string $goal = null, ?string $period = null, ?string $updated = null, string $site = 'saltypirate', string $language = 'en_US'): void
+    public function fundingCommand(?string $raised = null, ?string $goal = null, ?string $period = null, ?string $updated = null, ?string $currency = null, ?string $costs = null, string $site = 'saltypirate', string $language = 'en_US'): void
     {
-        $this->securityContext->withoutAuthorizationChecks(function () use ($raised, $goal, $period, $updated, $site, $language) {
+        $costs = $costs === null ? null : str_replace('\n', "\n", $costs);
+        $this->securityContext->withoutAuthorizationChecks(function () use ($raised, $goal, $period, $updated, $currency, $costs, $site, $language) {
             [$siteAggregate, $graph] = $this->openSite($site, $language);
             $main = $graph->findChildNodeAggregateByName($siteAggregate->nodeAggregateId, NodeName::fromString('main'));
             $existing = null;
@@ -310,10 +313,10 @@ class AhoiCommandController extends CommandController
                     $cta = $child->nodeAggregateId;
                 }
             }
-            $values = array_filter(['raised' => $raised, 'goal' => $goal, 'period' => $period, 'updated' => $updated], fn ($v) => $v !== null);
+            $values = array_filter(['raised' => $raised, 'goal' => $goal, 'period' => $period, 'updated' => $updated, 'currency' => $currency, 'costs' => $costs], fn ($v) => $v !== null);
             if ($existing !== null) {
                 if ($values === []) {
-                    $this->outputLine('Kostenbalken gibt es schon. Werte ändern mit --raised, --goal, --period, --updated.');
+                    $this->outputLine('Kostenbalken gibt es schon. Werte ändern mit --raised, --goal, --period, --updated, --currency, --costs.');
                     return;
                 }
                 $this->cr->handle(SetNodeProperties::create($this->workspace, $existing->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
@@ -333,11 +336,11 @@ class AhoiCommandController extends CommandController
                     'kicker' => 'Keep the ship afloat',
                     'headline' => 'Help cover the costs',
                     'text' => '<p>Salty Pirate is free to use and runs on our own hardware. What it costs is the domain and keeping everything running. If the bot helps your crew, a coffee helps us stay afloat – and here you can see every month how much of the costs the community covers.</p>',
-                    'goal' => '7.42',
+                    'goal' => '1.83',
                     'raised' => '0.00',
-                    'currency' => '€',
+                    'currency' => '$',
                     'period' => 'October 2026',
-                    'costs' => "Domain saltypirate.gg | € 7.42 / month | planned – € 88.98 per year\nServer & hosting | € 0.00 | runs on our own hardware",
+                    'costs' => "Domain saltypiratebot.com | $ 1.83 / month | $ 22 per year\nServer & hosting | $ 0.00 | runs on our own hardware",
                     'updated' => '21 Oct 2026',
                     'anchor' => 'support',
                 ], $values))
