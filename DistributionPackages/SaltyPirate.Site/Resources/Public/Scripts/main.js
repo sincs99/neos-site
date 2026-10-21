@@ -39,7 +39,12 @@
         var d = Math.floor(s / 86400);
         return d + (d === 1 ? ' day ago' : ' days ago');
     };
+    // Betrag ohne ".00", wenn er rund ist ("$ 25", aber "$ 4.50")
+    var amount = function (v) { return currency + ' ' + (v % 1 === 0 ? String(v) : v.toFixed(2)); };
     var what = function (r) {
+        if (typeof r.amount === 'number' && r.amount > 0) {
+            return r.monthly ? 'keeps ' + amount(r.amount) + ' of grog flowing every month' : 'poured ' + amount(r.amount) + ' of grog';
+        }
         if (r.monthly) { return 'keeps the grog flowing every month'; }
         if (r.coffees) { return 'poured ' + r.coffees + (r.coffees === 1 ? ' grog' : ' grogs'); }
         return 'chipped in';

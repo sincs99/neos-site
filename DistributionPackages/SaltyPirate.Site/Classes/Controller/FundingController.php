@@ -76,7 +76,7 @@ class FundingController extends ActionController
                 continue;
             }
             $raised += $s['perMonth'];
-            $entries[] = ['id' => $s['id'], 'name' => $s['name'], 'coffees' => null, 'monthly' => true, 'at' => max($s['startedAt'], $from)];
+            $entries[] = ['id' => $s['id'], 'name' => $s['name'], 'amount' => $s['perMonth'], 'coffees' => null, 'monthly' => true, 'at' => max($s['startedAt'], $from)];
         }
         usort($entries, fn ($a, $b) => $b['at'] <=> $a['at']);
 
@@ -88,6 +88,7 @@ class FundingController extends ActionController
             'recent' => array_map(fn ($e) => [
                 'id' => (string)$e['id'],
                 'name' => $e['name'],
+                'amount' => round((float)$e['amount'], 2),
                 'coffees' => $e['coffees'],
                 'monthly' => $e['monthly'] ?? false,
                 'at' => $e['at'],
