@@ -9,5 +9,9 @@ Neos:
         user: '%env:DB_USER%'
         password: '%env:DB_PASSWORD%'
         charset: utf8mb4
+    # Nginx Proxy Manager (SRV-INTEL-01) terminiert HTTPS; Port 8081 ist per Firewall nur im LAN offen
+    http:
+      trustedProxies:
+        proxies: '*'
   Imagine:
     driver: Imagick
