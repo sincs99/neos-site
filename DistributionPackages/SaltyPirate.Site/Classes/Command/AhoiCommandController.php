@@ -956,6 +956,90 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Admin-Befehle kennzeichnen (22.10.2026): "(Manage Server)" in den Befehlslisten, Hinweis im Setup
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function adminsCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        // Befehle mit has_permissions(manage_guild=True) im Bot
+        $adminCommands = ['/settings', '/usage', '/crew create', '/crew delete', '/crew captain'];
+        // Alle Crew-Befehle in der Reihenfolge von commands/registry.py
+        $crewCommands = [
+            '/crew list | All crews in this server',
+            '/crew info | Members and captain of a crew',
+            '/crew join | Ask to join a crew – the captain gets Accept/Decline buttons',
+            '/crew leave | Leave a crew',
+            '/crew add | Add a member to a crew (captain or Manage Server)',
+            '/crew remove | Remove a member from a crew (captain or Manage Server)',
+            '/crew create | Create a crew with its own role (Manage Server)',
+            '/crew captain | Make someone the captain of a crew (Manage Server)',
+            '/crew delete | Delete a crew and its role (Manage Server)',
+        ];
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $adminCommands, $crewCommands) {
+            [, $graph] = $this->openSite($site, $language);
+            $nodesOf = function (string $type) use ($graph): array {
+                $result = [];
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if ($aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                        $result[] = [$aggregate, $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)];
+                    }
+                }
+                return $result;
+            };
+            $set = function ($aggregateId, array $values) {
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+            };
+
+            // Befehlslisten: "Befehl | Beschreibung" -> Beschreibung endet auf "(Manage Server)"
+            foreach ($nodesOf('SaltyPirate.Site:Content.Category') as [$aggregate, $node]) {
+                $commands = (string)$node->getProperty('commands');
+                $lines = preg_split('/\r?\n/', $commands);
+                // Crew-Block vollständig ersetzen, an der Stelle der ersten Crew-Zeile
+                $crewAt = null;
+                foreach ($lines as $i => $line) {
+                    if (str_starts_with(trim($line), '/crew ')) {
+                        $crewAt ??= $i;
+                        unset($lines[$i]);
+                    }
+                }
+                if ($crewAt !== null) {
+                    $lines = array_values($lines);
+                    array_splice($lines, $crewAt, 0, $crewCommands);
+                }
+                foreach ($lines as $i => $line) {
+                    [$command, $description] = array_map('trim', explode('|', $line, 2) + [1 => '']);
+                    if (!in_array($command, $adminCommands, true)) {
+                        continue;
+                    }
+                    $description = trim(str_replace('(admins)', '', $description));
+                    if (!str_contains($description, '(Manage Server)')) {
+                        $description .= ' (Manage Server)';
+                    }
+                    $lines[$i] = $command . ' | ' . $description;
+                }
+                $new = implode("\n", $lines);
+                if ($new !== $commands) {
+                    $set($aggregate->nodeAggregateId, ['commands' => $new]);
+                    $this->outputLine('Bereich "%s" gekennzeichnet', [(string)$node->getProperty('title')]);
+                }
+            }
+
+            // Setup: im Zeitzonen-Schritt erklären, wer Einstellungen ändern darf
+            foreach ($nodesOf('SaltyPirate.Site:Content.Step') as [$aggregate, $node]) {
+                $text = (string)$node->getProperty('text');
+                if (!str_contains((string)$node->getProperty('title'), 'timezone') || str_contains($text, 'Who can change settings')) {
+                    continue;
+                }
+                $set($aggregate->nodeAggregateId, ['text' => $text . '<p><strong>Who can change settings?</strong> Only members with <strong>Manage Server</strong> see and use <code>/settings</code>, <code>/usage</code> and the crew admin commands (<code>/crew create</code>, <code>/crew delete</code>, <code>/crew captain</code>) – for everyone else they don’t even show up. To let your mods use them too: <em>Server Settings → Integrations → Salty Pirate</em>, pick the command and add their role.</p>']);
+                $this->outputLine('Setup: Hinweis "Who can change settings?" ergänzt');
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
