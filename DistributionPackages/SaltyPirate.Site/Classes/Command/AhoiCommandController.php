@@ -878,6 +878,84 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Setup-Seite für fremde Admins ergänzen (22.10.2026): Kanalrechte, Updates folgen, Fehlersuche
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function setupguideCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $supportUrl = (string)$siteAggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('supportUrl');
+            $support = $supportUrl !== '' ? '<a href="' . htmlspecialchars($supportUrl) . '" target="_blank" rel="noopener">support server</a>' : 'support server';
+
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('SaltyPirate.Site:Content.Steps')) as $stepsAggregate) {
+                $items = $graph->findChildNodeAggregateByName($stepsAggregate->nodeAggregateId, NodeName::fromString('items'));
+                if ($items === null) {
+                    continue;
+                }
+                // Schritte in Reihenfolge: [id, titel]
+                $steps = [];
+                foreach ($graph->findChildNodeAggregates($items->nodeAggregateId) as $child) {
+                    if ($child->occupiesDimensionSpacePoint($this->origin)) {
+                        $steps[] = [$child->nodeAggregateId, (string)$child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('title')];
+                    }
+                }
+                $titles = array_column($steps, 1);
+                $find = fn (string $part) => array_key_first(array_filter($titles, fn ($t) => str_contains($t, $part)));
+                $insert = function (array $props, ?NodeAggregateId $before) use ($items) {
+                    $this->cr->handle(CreateNodeAggregateWithNode::create(
+                        $this->workspace,
+                        NodeAggregateId::create(),
+                        NodeTypeName::fromString('SaltyPirate.Site:Content.Step'),
+                        $this->origin,
+                        $items->nodeAggregateId,
+                        $before,
+                        PropertyValuesToWrite::fromArray($props)
+                    ));
+                    $this->outputLine('Schritt "%s" angelegt', [$props['title']]);
+                };
+
+                // Einladen: kein Administrator, Begrüßung im Systemkanal
+                $invite = $find('Invite Salty Pirate');
+                if ($invite !== null) {
+                    $this->cr->handle(SetNodeProperties::create($this->workspace, $steps[$invite][0], $this->origin, PropertyValuesToWrite::fromArray([
+                        'text' => '<p>Click <strong>Add to Discord</strong>, pick your server and keep the suggested permissions – they are exactly what the features need. You need the <strong>Manage Server</strong> permission on that server.</p><p>Never give the bot <strong>Administrator</strong> – it doesn’t need it. Manage Channels, Manage Roles and Manage Events are only used by the optional extras below; if you untick them, everything else still works.</p><p>When it joins, Salty Pirate posts a short hello in your server’s system channel pointing to <code>/discover</code> and <code>/help</code>. Already have the bot on another server? <code>/invite</code> gives you the same link.</p>',
+                    ])));
+                    $this->outputLine('Schritt "Invite" ergänzt');
+                }
+
+                // Kanalrechte: nach der Zeitzone, vor den optionalen Schritten
+                if ($find('Channel permissions') === null) {
+                    $timezone = $find('timezone');
+                    $before = $timezone !== null && isset($steps[$timezone + 1]) ? $steps[$timezone + 1][0] : null;
+                    $insert([
+                        'title' => 'Channel permissions',
+                        'badge' => 'If needed',
+                        'text' => '<p>The bot’s role works everywhere <code>@everyone</code> can post. For <strong>private or locked channels</strong> (news, LFG, sessions, reputation), add it by hand: <em>Edit Channel → Permissions → add Salty Pirate</em> and allow:</p><ul><li><strong>View Channel</strong></li><li><strong>Send Messages</strong></li><li><strong>Embed Links</strong></li></ul><p>For crew voice channels the bot also needs <strong>Manage Channels</strong> in the category you pick with <code>lfg_voice_category:</code>.</p><p>Want the commands only in certain channels or for certain roles? <em>Server Settings → Integrations → Salty Pirate</em>.</p>',
+                    ], $before);
+                }
+
+                // Updates folgen und Fehlersuche: ans Ende
+                if ($find('Stay updated') === null) {
+                    $insert([
+                        'title' => 'Stay updated',
+                        'badge' => 'Optional',
+                        'text' => '<p>Join our ' . $support . ' and <strong>follow #announcements</strong> – new versions then show up in a channel on your own server.</p>',
+                    ], null);
+                }
+                if ($find('doesn’t answer') === null) {
+                    $insert([
+                        'title' => 'Bot doesn’t answer?',
+                        'text' => '<ul><li><strong>Nothing happens in one channel:</strong> the bot can’t see or post there – check the channel permissions above.</li><li><strong>Slash commands are missing:</strong> reopen Discord, then check <em>Server Settings → Integrations → Salty Pirate</em> for channel or role limits.</li><li><strong><code>/crew</code> can’t give roles:</strong> drag the bot’s role above the crew roles.</li><li><strong>No crew voice channel:</strong> the bot needs Manage Channels in that category.</li></ul><p>Still stuck? Send <code>/feedback</code> or ask in the ' . $support . '.</p>',
+                    ], null);
+                }
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
