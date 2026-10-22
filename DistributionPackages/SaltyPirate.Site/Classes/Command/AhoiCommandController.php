@@ -1187,6 +1187,65 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Website auf Bot-Version 2.1.1 bringen (22.10.2026: Website-/Status-Links, Daten 30 Tage nach Entfernen löschen)
+     *
+     * Fristen nach guild_cleanup.py: DEPARTED_KEEP_DAYS 30, usage.prune 90 Tage, lfg.prune_expired_posts (6 h).
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function update211Command(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $releases = [
+            ['2.1.0', '2026-10-22', [
+                'New: `/help`, `/about` and `/invite` link to our website saltypiratebot.com and the status page, so you can check whether the bot is online',
+                'New: when Salty Pirate joins a server, the welcome message links the setup guide (permissions, channels and settings)',
+                'Privacy: if a server removes the bot, its data (settings, profiles, crews, reputation, loot, sessions) is deleted after 30 days; adding the bot back before then keeps everything',
+                'Privacy: command usage counts are kept for 90 days, and LFG cards are deleted by the daily cleanup once they have expired (after 6 hours)',
+                'Fixed: the `/feedback` example no longer suggests trade routes',
+            ]],
+            ['2.1.1', '2026-10-22', [
+                'Improved: command descriptions now name the permission they need, e.g. `/crew create` (Manage Server) and `/usage` (Manage Server), the same wording as on the website',
+            ]],
+        ];
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $releases) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $this->cr->handle(SetNodeProperties::create($this->workspace, $siteAggregate->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray(['version' => '2.1.1'])));
+            $this->outputLine('Version 2.1.1 gesetzt');
+
+            $changelogs = [];
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('SaltyPirate.Site:Content.Changelog')) as $aggregate) {
+                if ($aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                    $changelogs[] = [$aggregate, $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)];
+                }
+            }
+            $this->addReleases($graph, $changelogs, $releases);
+
+            // Datenschutz: neue Fristen aus guild_cleanup.py
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('SaltyPirate.Site:Content.Text')) as $aggregate) {
+                if (!$aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                    continue;
+                }
+                $node = $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin);
+                if ((string)$node->getProperty('headline') !== 'How long we keep data') {
+                    continue;
+                }
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregate->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray([
+                    'text' => '<ul><li><strong>LFG posts</strong> expire after 6 hours and are deleted by the daily cleanup.</li><li><strong>Sessions</strong> and their RSVPs are deleted 7 days after the start.</li><li><strong>Cooking reminders</strong> are deleted a day after they were sent.</li><li><strong>Command usage counts</strong> contain no user IDs – only which command was used how often per server and day – and are kept for 90 days.</li><li><strong>Profiles, crews, reputation and loot</strong> stay until you or your admins remove them.</li><li><strong>If you remove the bot from your server</strong>, everything stored for that server is deleted after 30 days. Add the bot back before then and nothing is lost.</li></ul>',
+                ])));
+                $this->outputLine('Datenschutz: Fristen 2.1.0 eingetragen');
+            }
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('SaltyPirate.Site:Content.Text')) as $aggregate) {
+                if ($aggregate->occupiesDimensionSpacePoint($this->origin)
+                    && (string)$aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('headline') === 'What Salty Pirate stores') {
+                    $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregate->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray(['kicker' => 'Updated 22 October 2026 · bot 2.1'])));
+                }
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
