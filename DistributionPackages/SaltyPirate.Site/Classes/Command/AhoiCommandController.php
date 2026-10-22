@@ -1164,6 +1164,29 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Datenschutz und Terms gelten als fertig (22.10.2026, Benutzerentscheid: ohne Namen, Kontakt über den Support-Server)
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function legalfinalCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language) {
+            [, $graph] = $this->openSite($site, $language);
+            foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString('SaltyPirate.Site:Content.Text')) as $aggregate) {
+                if (!$aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                    continue;
+                }
+                $node = $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin);
+                if (str_starts_with((string)$node->getProperty('kicker'), 'Draft')) {
+                    $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregate->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray(['kicker' => 'Updated 22 October 2026'])));
+                    $this->outputLine('"%s": Entwurfsvermerk entfernt', [(string)$node->getProperty('headline')]);
+                }
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
