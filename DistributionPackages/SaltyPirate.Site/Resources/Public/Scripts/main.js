@@ -33,7 +33,7 @@
                 box.className = 'sp-footer__status is-' + state;
                 text.textContent = labels[state];
                 if (data && data.checkedAt) {
-                    box.title = 'Checked ' + new Date(data.checkedAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    box.title = 'Checked ' + new Date(data.checkedAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' – click for the status page';
                 }
                 box.hidden = false;
             })

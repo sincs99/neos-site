@@ -96,7 +96,7 @@ prototype(SaltyPirate.Site:Component.Footer) < prototype(Neos.Fusion:Component) 
                         </span>
                         <p>Your crew's first mate on Discord – voyage help, riddles, crews and sessions for Sea of Thieves.</p>
                         <p class="sp-footer__version" @if.has={props.version}>Current version {props.version}</p>
-                        <p class="sp-footer__status" data-bot-status="/api/status" hidden><span class="sp-footer__dot" aria-hidden="true"></span><span data-bot-status-text>Bot status</span></p>
+                        <p class="sp-footer__status" data-bot-status="/api/status" hidden><a class="sp-footer__statuslink" href="https://status.saltypiratebot.com/status/saltypirate" target="_blank" rel="noopener"><span class="sp-footer__dot" aria-hidden="true"></span><span data-bot-status-text>Bot status</span></a></p>
                     </div>
                     <div class="sp-footer__col">
                         <h4>Pages</h4>
