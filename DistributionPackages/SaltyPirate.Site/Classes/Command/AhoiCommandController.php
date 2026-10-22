@@ -1100,6 +1100,70 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Feinschliff 22.10.2026: Terms (Spenden, Recht), Statusseite in der Fehlersuche, Datenschutz ohne Google Fonts
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function feinschliffCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $status = '<a href="https://status.saltypiratebot.com" target="_blank" rel="noopener">status.saltypiratebot.com</a>';
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $status) {
+            [, $graph] = $this->openSite($site, $language);
+            $set = function ($aggregateId, array $values) {
+                $this->cr->handle(SetNodeProperties::create($this->workspace, $aggregateId, $this->origin, PropertyValuesToWrite::fromArray($values)));
+            };
+            foreach (['SaltyPirate.Site:Content.Text', 'SaltyPirate.Site:Content.Step'] as $type) {
+                foreach ($graph->findNodeAggregatesByType(NodeTypeName::fromString($type)) as $aggregate) {
+                    if (!$aggregate->occupiesDimensionSpacePoint($this->origin)) {
+                        continue;
+                    }
+                    $node = $aggregate->getNodeByOccupiedDimensionSpacePoint($this->origin);
+                    $text = (string)$node->getProperty('text');
+                    $headline = (string)$node->getProperty('headline');
+                    $title = (string)$node->getProperty('title');
+
+                    // Terms: Spenden und anwendbares Recht vor dem Kontakt
+                    if ($headline === 'Terms of Service' && !str_contains($text, 'Donations.')) {
+                        $new = preg_replace(
+                            '#<strong>8\. Contact\.</strong>#',
+                            '<strong>8. Donations.</strong> Donations through Buy Me a Coffee are voluntary and help cover our costs. They don’t buy features, perks or a guaranteed service. Refunds are handled by Buy Me a Coffee under its own terms.</p>'
+                            . '<p><strong>9. Governing law.</strong> These terms are governed by Swiss law.</p>'
+                            . '<p><strong>10. Contact.</strong>',
+                            $text
+                        );
+                        $set($aggregate->nodeAggregateId, ['text' => $new, 'kicker' => 'Draft · updated 22 October 2026']);
+                        $this->outputLine('Terms: Spenden und Recht ergänzt');
+                    }
+
+                    // Setup-Fehlersuche: zuerst die Statusseite
+                    if (str_contains($title, 'answer?') && !str_contains($text, 'status.saltypiratebot.com')) {
+                        $new = preg_replace('#<ul>#', '<ul><li><strong>Is the bot down?</strong> Check ' . $status . ' first.</li>', $text, 1);
+                        $set($aggregate->nodeAggregateId, ['text' => $new]);
+                        $this->outputLine('Setup: Statusseite in der Fehlersuche');
+                    }
+
+                    // Datenschutz: Schriften kommen jetzt vom eigenen Server
+                    if ($headline === 'This website' && str_contains($text, 'Google Fonts')) {
+                        $new = preg_replace(
+                            '#<p>The website loads its fonts from <strong>Google Fonts</strong>.*?</p>#s',
+                            '<p>Fonts, styles and scripts come from our own server – the website loads nothing from Google or other third parties. Buttons to Discord and Buy Me a Coffee only connect you to those services when you click them. The live bot status links to our status page ' . $status . ', which runs on our own server too.</p>',
+                            $text
+                        );
+                        $set($aggregate->nodeAggregateId, ['text' => $new]);
+                        $this->outputLine('Datenschutz: Google Fonts entfernt');
+                    }
+                    if ($headline === 'Your rights & contact' && str_contains($text, 'Google Fonts')) {
+                        $set($aggregate->nodeAggregateId, ['text' => str_replace('Discord, Buy Me a Coffee and Google Fonts process', 'Discord and Buy Me a Coffee process', $text)]);
+                        $this->outputLine('Datenschutz: Kontaktabschnitt angepasst');
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs

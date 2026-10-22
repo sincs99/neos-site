@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Salty Pirate: Platzhalter bis zum echten Logo (Goldmünze mit Totenkopf wie im Seitenlogo) -->
+  <circle cx="32" cy="32" r="30" fill="#e9b44c" stroke="#f7d68c" stroke-width="3"/>
+  <text x="32" y="44" text-anchor="middle" font-size="34" font-family="Segoe UI Symbol, Noto Sans Symbols, sans-serif" fill="#061319">☠</text>
+</svg>

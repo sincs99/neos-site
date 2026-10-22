@@ -23,3 +23,6 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --no-p
 EXPOSE 80
 ENTRYPOINT ["neos-entrypoint"]
 CMD ["apache2-foreground"]
+
+# robots.txt fuer alle Sites (Apache liefert sie direkt aus Web/, Web entsteht erst bei composer install)
+COPY docker/robots.txt /app/Web/robots.txt

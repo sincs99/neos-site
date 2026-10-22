@@ -35,5 +35,4 @@ class StatusController extends ActionController
         $this->response->setContentType('application/json');
         $this->response->setHttpHeader('Cache-Control', 'no-store');
         return json_encode(['bot' => $bot, 'checkedAt' => $checkedAt]);
-    }
-}
+    }}

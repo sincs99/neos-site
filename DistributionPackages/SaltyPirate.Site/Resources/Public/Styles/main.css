@@ -3,6 +3,13 @@
    Alle Farben/Schriften als Variablen -> hier zentral anpassen.
    ========================================================================= */
 
+/* Schriften selbst ausgeliefert (vorher Google Fonts, kein Kontakt zu Google mehr), nur lateinischer
+   Zeichensatz; Inter und JetBrains Mono sind variable Schriften (eine Datei für alle Gewichte).
+   Lizenz: SIL Open Font License 1.1, siehe Fonts/README.txt */
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('../Fonts/Inter-latin.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500 600; font-display: swap; src: url('../Fonts/JetBrainsMono-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Pirata One'; font-style: normal; font-weight: 400; font-display: swap; src: url('../Fonts/PirataOne-latin.woff2') format('woff2'); }
+
 :root {
     --sp-deep: #061319;
     --sp-sea: #0a2029;

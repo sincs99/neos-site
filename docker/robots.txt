@@ -1,0 +1,4 @@
+# Gilt für alle Sites dieser Neos-Instanz (Apache liefert /robots.txt direkt aus Web/ aus)
+User-agent: *
+Disallow: /neos
+Disallow: /api/
