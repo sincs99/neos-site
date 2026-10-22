@@ -1040,6 +1040,66 @@ class AhoiCommandController extends CommandController
     }
 
     /**
+     * Datenschutzseite überarbeiten (22.10.2026): Bot-Daten mit Fristen, Spender, Website, Rechte
+     *
+     * Fristen nach dem Bot-Code: sessions.KEEP_DAYS (7), reminders.KEEP_DONE_SECONDS (24 h), lfg.LFG_TTL_SECONDS (6 h);
+     * NPM-Zugriffslogs: logrotate weekly, rotate 4.
+     *
+     * @param string $site Knotenname der Site
+     * @param string $language Sprache (Dimension) der Inhalte
+     */
+    public function privacyCommand(string $site = 'saltypirate', string $language = 'en_US'): void
+    {
+        $sections = [
+            'What the bot doesn’t do' => '<ul><li>It <strong>doesn’t read your messages</strong> – it has no access to message content and only sees the slash commands and buttons you use.</li><li>It doesn’t store direct messages, voice or anything outside the features listed above.</li><li>It doesn’t sell or share your data and shows no ads.</li></ul>',
+            'How long we keep data' => '<ul><li><strong>LFG posts</strong> expire after 6 hours.</li><li><strong>Sessions</strong> and their RSVPs are deleted 7 days after the start.</li><li><strong>Cooking reminders</strong> are deleted a day after they were sent.</li><li><strong>Profiles, crews, reputation and loot</strong> stay until you or your admins remove them.</li><li><strong>Command usage counts</strong> contain no user IDs – only which command was used how often per server and day.</li><li>If you remove the bot from your server, its data stays until you ask us to delete it on the support server.</li></ul>',
+            'Supporters on this website' => '<p>Donations go through <a href="https://buymeacoffee.com/privacy-policy" target="_blank" rel="noopener">Buy Me a Coffee</a> – we never see your payment details. Buy Me a Coffee tells our server about each donation, and we keep the <strong>name you entered there, the amount and the time</strong> (no e-mail address).</p><p>The funding bar on our home page shows this month’s supporters with name, amount and time. Prefer not to be listed? Use a nickname at Buy Me a Coffee, or ask us on the support server and we remove your name.</p>',
+            'This website' => '<p>The website sets <strong>no cookies</strong> and uses no analytics or tracking. Our server keeps access logs (IP address, page, time) for security and error analysis for about four weeks.</p><p>The website loads its fonts from <strong>Google Fonts</strong>, so your browser connects to Google, which sees your IP address. Buttons to Discord and Buy Me a Coffee only connect you to those services when you click them.</p>',
+            'Your rights & contact' => '<p>Salty Pirate is a hobby project run from Switzerland. The bot and the website run on our own servers. Discord, Buy Me a Coffee and Google Fonts process data under their own privacy policies.</p><p>You can ask what we store about you, have it corrected or deleted. Reach us on the support server or with <code>/feedback</code>.</p>',
+        ];
+
+        $this->securityContext->withoutAuthorizationChecks(function () use ($site, $language, $sections) {
+            [$siteAggregate, $graph] = $this->openSite($site, $language);
+            $page = null;
+            foreach ($graph->findChildNodeAggregates($siteAggregate->nodeAggregateId) as $child) {
+                if ($child->occupiesDimensionSpacePoint($this->origin) && $child->getNodeByOccupiedDimensionSpacePoint($this->origin)->getProperty('uriPathSegment') === 'privacy') {
+                    $page = $child;
+                }
+            }
+            if ($page === null) {
+                $this->outputLine('<error>Seite "privacy" nicht gefunden.</error>');
+                $this->quit(1);
+            }
+            $main = $graph->findChildNodeAggregateByName($page->nodeAggregateId, NodeName::fromString('main'));
+            $existing = [];
+            foreach ($graph->findChildNodeAggregates($main->nodeAggregateId) as $child) {
+                if (!$child->occupiesDimensionSpacePoint($this->origin)) {
+                    continue;
+                }
+                $node = $child->getNodeByOccupiedDimensionSpacePoint($this->origin);
+                $headline = (string)$node->getProperty('headline');
+                $existing[] = $headline;
+                if ($headline === 'What Salty Pirate stores') {
+                    $text = str_replace('Salty Pirate runs on our own server.', 'Salty Pirate runs on our own servers in Switzerland.', (string)$node->getProperty('text'));
+                    $this->cr->handle(SetNodeProperties::create($this->workspace, $child->nodeAggregateId, $this->origin, PropertyValuesToWrite::fromArray([
+                        // "Draft" bleibt, bis Name und Kontakt des Verantwortlichen geklärt sind (nDSG)
+                        'kicker' => 'Draft · updated 22 October 2026',
+                        'text' => $text,
+                    ])));
+                    $this->outputLine('Abschnitt "What Salty Pirate stores" aktualisiert');
+                }
+            }
+            foreach ($sections as $headline => $text) {
+                if (in_array($headline, $existing, true)) {
+                    continue;
+                }
+                $this->content($main->nodeAggregateId, 'Text', ['headline' => $headline, 'text' => $text]);
+                $this->outputLine('Abschnitt "%s" angelegt', [$headline]);
+            }
+        });
+    }
+
+    /**
      * Releases (älteste zuerst) jeweils oben in jeden Changelog-Baustein einfügen, falls die Version noch fehlt
      *
      * @param array<array{\Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate, mixed}> $changelogs
