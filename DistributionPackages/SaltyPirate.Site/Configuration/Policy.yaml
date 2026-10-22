@@ -1,11 +1,15 @@
-# Kostenbalken live: Webhook (prüft selbst die Signatur) und Monatsstand sind öffentlich
+# Öffentliche Endpunkte: Kostenbalken (Webhook prüft selbst die Signatur, Monatsstand) und Bot-Status im Footer
 privilegeTargets:
   'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
     'SaltyPirate.Site:Funding':
       matcher: 'method(SaltyPirate\Site\Controller\FundingController->(webhook|status)Action())'
+    'SaltyPirate.Site:Status':
+      matcher: 'method(SaltyPirate\Site\Controller\StatusController->showAction())'
 
 roles:
   'Neos.Flow:Everybody':
     privileges:
       - privilegeTarget: 'SaltyPirate.Site:Funding'
+        permission: GRANT
+      - privilegeTarget: 'SaltyPirate.Site:Status'
         permission: GRANT

@@ -18,6 +18,32 @@
     }
 })();
 
+// Salty Pirate: Bot-Status im Footer (/api/status, alle 5 Minuten vom Wächter auf dem Server geprüft)
+(function () {
+    var box = document.querySelector('[data-bot-status]');
+    if (!box || !window.fetch) { return; }
+    var text = box.querySelector('[data-bot-status-text]');
+    var labels = { up: 'Bot online', down: 'Bot offline – we’re on it', unknown: 'Bot status unknown' };
+    var poll = function () {
+        if (document.hidden) { return; }
+        fetch(box.getAttribute('data-bot-status'), { cache: 'no-store', headers: { Accept: 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                var state = data && labels[data.bot] ? data.bot : 'unknown';
+                box.className = 'sp-footer__status is-' + state;
+                text.textContent = labels[state];
+                if (data && data.checkedAt) {
+                    box.title = 'Checked ' + new Date(data.checkedAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                box.hidden = false;
+            })
+            .catch(function () {});
+    };
+    poll();
+    setInterval(poll, 60000);
+    document.addEventListener('visibilitychange', poll);
+})();
+
 // Salty Pirate: Kostenbalken live (ein Kaffee bei BMC = ein Grog auf der Seite)
 // (Spenden über den Buy-Me-a-Coffee-Webhook, /api/funding)
 (function () {

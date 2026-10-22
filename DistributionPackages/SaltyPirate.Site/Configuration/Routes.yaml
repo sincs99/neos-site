@@ -18,3 +18,14 @@
     '@controller': 'Funding'
     '@action': 'status'
     '@format': 'json'
+
+# Bot-Status im Footer (StatusController, Datei schreibt der Wächter auf Centauri)
+-
+  name: 'Bot status'
+  uriPattern: 'api/status'
+  httpMethods: ['GET']
+  defaults:
+    '@package': 'SaltyPirate.Site'
+    '@controller': 'Status'
+    '@action': 'show'
+    '@format': 'json'
